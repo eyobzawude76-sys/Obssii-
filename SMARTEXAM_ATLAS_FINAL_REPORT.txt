@@ -1,0 +1,160 @@
+﻿SMARTEXAM ETHIOPIA — MONGODB ATLAS FINAL REPORT
+================================================================
+
+Generated: 2026-11-20 13:39:01 +03:00
+Project root: C:\Users\hp\Desktop\Exam\Online-Examination-System\Online-Examination-System-main
+Report scope: Work authorized and completed so far is Phase 1 read-only audit only. Atlas setup, migration, configuration changes, and application functional testing have not been approved or performed.
+
+STATUS DEFINITIONS
+PASS = verified successfully.
+FAIL = a verified requirement currently fails.
+BLOCKED = cannot proceed until an identified dependency or approval is provided.
+NOT TESTED = no test was performed.
+
+1. PROJECT INFORMATION
+Status: PASS
+Project package: online-examination-system 0.1.0.
+Inspected stack: Next.js 16.0.1, React 19.2.0, TypeScript 5, Mongoose 8.19.2, MongoDB Node driver 6.20.0.
+The supplied description says FastAPI and Motor, but this checkout contains a Next.js/TypeScript backend using Mongoose. No FastAPI, Motor, or Python backend was found.
+
+2. ORIGINAL LOCAL MONGODB CONFIGURATION
+Status: PASS
+Local URI shape: mongodb://127.0.0.1:27017/online-examination-system
+Credentials: none present in the observed local URI; no credential values are included in this report.
+The local database was reached from the audit environment for read-only metadata/count queries.
+
+3. MONGODB ATLAS CONNECTION STATUS
+Status: BLOCKED
+No valid MONGODB_URI or MONGODB_URL assignment was present in .env.local during the audit. Atlas connectivity and Atlas authentication were not tested.
+A credential-bearing raw Atlas-looking URI was found in .env.example. The URI is omitted. Treat that database password as exposed and rotate it in Atlas. .env.example is not ignored by Git. This checkout has no Git metadata, so whether it has already been committed could not be confirmed.
+
+4. DATABASE AND COLLECTION NAMES
+Status: PASS for local source discovery; BLOCKED for Atlas destination discovery
+Source database: online-examination-system
+Live local collections:
+users
+questions
+grades
+tests
+sections
+subjects
+results
+teacherassignments
+sessions
+termstemplates
+Atlas database and collection inventory: not available; Atlas was not connected.
+
+5. SOURCE AND DESTINATION DOCUMENT COUNTS
+Status: PASS for live local source counts; BLOCKED for destination counts
+Live local source total: 18 documents.
+users: 5
+questions: 2
+grades: 2
+tests: 2
+sections: 2
+subjects: 1
+results: 1
+teacherassignments: 3
+sessions: 0
+termstemplates: 0
+Atlas destination counts: unavailable; not connected.
+Prior snapshot discrepancy: V1_LOCAL_DATABASE_AUDIT.json dated 2026-11-18 reports users 41, students 31, grades 2, sections 2, subjects 1, teacher assignments 2, tests 25, questions 25, and results 231. The live 2026-11-20 local query differs materially. Reconcile the intended source database and these count changes before migration.
+
+6. MIGRATION RESULTS FOR EVERY COLLECTION
+Status: BLOCKED — migration was not run, per the Phase 1-only scope.
+users: NOT MIGRATED
+questions: NOT MIGRATED
+grades: NOT MIGRATED
+tests: NOT MIGRATED
+sections: NOT MIGRATED
+subjects: NOT MIGRATED
+results: NOT MIGRATED
+teacherassignments: NOT MIGRATED
+sessions: NOT MIGRATED
+termstemplates: NOT MIGRATED
+No Atlas writes were made.
+
+7. DOCUMENT ID AND DATA INTEGRITY VERIFICATION
+Status: NOT TESTED
+No source-to-destination comparison was possible because Atlas was not connected and no migration was performed. Local document IDs and application records were not modified.
+
+8. INDEX AND UNIQUE CONSTRAINT VERIFICATION
+Status: PASS for local source inventory; BLOCKED for destination comparison
+Live source indexes found:
+users: _id_; unique email; unique sparse username; unique sparse studentId.
+questions: _id_; unique testId (uniq_question_set_per_test).
+grades: _id_; unique level.
+tests: _id_.
+sections: _id_; unique compound grade/name.
+subjects: _id_; unique normalizedName.
+results: _id_; unique student/test partial on testCompleted=false.
+teacherassignments: _id_; unique compound teacher/grade/section/subject.
+sessions: _id_; unique token.
+termstemplates: _id_; unique teacher.
+Atlas index comparison: not performed.
+
+9. SECURITY VERIFICATION
+Status: FAIL / BLOCKED
+FAIL: .env.example contains a raw Atlas-looking credential-bearing URI rather than placeholders. Rotate the corresponding database password and replace the sample value before later phases.
+BLOCKED: Atlas user privileges and network allowlist were not inspected.
+PASS: .env.local is covered by the .env* ignore pattern.
+RISK: .env.example is explicitly unignored and may be committed; Git tracking status could not be checked because Git metadata was absent.
+No credential, JWT secret, token, or connection string value is reproduced in this report.
+
+10. BACKEND CONNECTION VERIFICATION
+Status: PASS for local MongoDB read-only audit; BLOCKED for Atlas
+src/lib/mongoose-connect.ts reads MONGODB_URI and calls mongoose.connect.
+A direct read-only connection to the local database succeeded. Application connection to Atlas was not verified.
+The requested MONGODB_URL variable is not currently used by this codebase.
+
+11. ADMIN FUNCTIONALITY TEST RESULTS
+Status: NOT TESTED
+No admin login or admin workflow tests were run.
+
+12. TEACHER FUNCTIONALITY TEST RESULTS
+Status: NOT TESTED
+No teacher login, question, exam, submission review, grading, or result publication tests were run.
+
+13. STUDENT FUNCTIONALITY TEST RESULTS
+Status: NOT TESTED
+No student login, exam, submission, attempt restriction, retake, or result visibility tests were run.
+
+14. DATA PERSISTENCE VERIFICATION
+Status: NOT TESTED
+No Atlas writes or backend-restart persistence checks were performed.
+
+15. FILES CREATED OR MODIFIED
+Status: PASS
+Created: ATLAS_MIGRATION_AUDIT.md (Phase 1 audit report).
+Created: SMARTEXAM_ATLAS_FINAL_REPORT.txt (this report).
+Application source/configuration files: not modified.
+Database records, collections, and indexes: not modified.
+
+16. ERRORS AND UNRESOLVED ISSUES
+Status: BLOCKED
+- Atlas connection details are not configured in .env.local.
+- Credential-bearing URI exists in .env.example; rotate and remove it from the sample file.
+- Live source counts conflict with the earlier 2026-11-18 audit snapshot.
+- Atlas destination collections, counts, conflicts, and indexes remain unknown.
+- Project architecture differs from the supplied FastAPI/Motor description.
+
+17. REMAINING TASKS
+Status: BLOCKED pending prerequisites and approvals
+- Rotate the exposed Atlas database password.
+- Reconcile which local dataset is authoritative and why counts changed.
+- Replace the .env.example URI with placeholder-only environment assignments.
+- Configure the rotated Atlas URI privately in local environment settings.
+- Audit Atlas destination collections, counts, indexes, and conflicts.
+- Present the source/destination inventory and migration strategy for review.
+- Obtain explicit approval before any Atlas migration write.
+- After approval, migrate and verify IDs, counts, document integrity, and indexes.
+- Configure and verify the production backend connection.
+- Run approved isolated functional tests across admin, teacher, and student workflows.
+
+18. ROLLBACK AND BACKUP INFORMATION
+Status: PASS for unchanged source; NOT APPLICABLE to migration
+No migration or database write occurred, so no rollback was needed. Local source records remain unchanged by this work. No backup was created. Before any future migration, create and verify a source backup and define a rollback procedure; do not delete or overwrite the local source.
+
+19. OVERALL FINAL STATUS
+Status: BLOCKED
+Phase 1 read-only audit is complete. Atlas setup, migration, destination verification, backend switch, and functional testing are incomplete. No migration success is claimed. Continue only after the source count discrepancy is resolved, the exposed credential is rotated, Atlas configuration is provided privately, and the required migration approval is obtained.
