@@ -157,7 +157,10 @@ export default function AdminUsersPage() {
       body: JSON.stringify({ id }),
     });
     if (res.ok) await load();
-    else setMessage("Could not remove assignment");
+    else {
+      const data = await res.json();
+      setMessage(data.error || "Could not remove assignment");
+    }
   };
   const saveEnrollment = async (e: FormEvent) => {
     e.preventDefault();
