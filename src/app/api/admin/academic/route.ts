@@ -144,10 +144,11 @@ export async function PATCH(req: NextRequest) {
         if (
           sectionInUse &&
           ((await User.exists({ section: id })) ||
-            (await TeacherAssignment.exists({ section: id })))
+            (await TeacherAssignment.exists({ section: id })) ||
+            (await Test.exists({ section: id })))
         )
           return badRequest(
-            "Section is in use and cannot be moved to another grade",
+            "Section is in use by accounts, teacher assignments, or exam history and cannot be moved to another grade",
             409,
           );
         update.grade = parsed.data.gradeId;
