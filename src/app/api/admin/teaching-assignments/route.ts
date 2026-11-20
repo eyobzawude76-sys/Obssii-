@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
   await dbConnect();
   const { teacherId, gradeId, sectionId, subjectId } = parsed.data;
   const [teacher, grade, section, subject] = await Promise.all([
-    User.exists({ _id: teacherId, role: "teacher" }),
+    User.exists({ _id: teacherId, role: "teacher", isActive: true }),
     Grade.exists({ _id: gradeId }),
     Section.exists({ _id: sectionId, grade: gradeId }),
     Subject.exists({ _id: subjectId }),
