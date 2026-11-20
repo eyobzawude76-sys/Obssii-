@@ -77,7 +77,7 @@ export default function AdminUsersPage() {
   const availableSections = sections.filter(
     (s) => String(s.grade?._id ?? s.grade) === gradeId,
   );
-  const teachers = users.filter((u) => u.role === "teacher");
+  const teachers = users.filter((u) => u.role === "teacher" && u.isActive);
   const filtered = useMemo(
     () =>
       users.filter((u) =>
