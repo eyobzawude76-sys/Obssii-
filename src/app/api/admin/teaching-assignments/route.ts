@@ -7,6 +7,7 @@ import Grade from "@/models/Grade";
 import Section from "@/models/Section";
 import Subject from "@/models/Subject";
 import TeacherAssignment from "@/models/TeacherAssignment";
+import Test from "@/models/Test";
 import User from "@/models/User";
 
 const assignmentInput = z.object({
@@ -101,6 +102,30 @@ export async function DELETE(req: NextRequest) {
       { status: 400 },
     );
   await dbConnect();
+  const assignment = await TeacherAssignment.findById(parsed.data.id).lean();
+  if (!assignment)
+    return NextResponse.json({ success: false });
+
+  const linkedTest = await Test.exists({
+    $or: [
+      { assignment: assignment._id },
+      {
+        teacher: assignment.teacher,
+        grade: assignment.grade,
+        section: assignment.section,
+        subjectId: assignment.subject,
+      },
+    ],
+  });
+  if (linkedTest)
+    return NextResponse.json(
+      {
+        error:
+          "This assignment is linked to an exam. Keep it to preserve exam and result history.",
+      },
+      { status: 409 },
+    );
+
   const deleted = await TeacherAssignment.findByIdAndDelete(parsed.data.id);
   return NextResponse.json({ success: !!deleted });
 }
