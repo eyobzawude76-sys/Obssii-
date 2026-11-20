@@ -211,16 +211,24 @@ export async function DELETE(req: NextRequest) {
   if (kind === "grade") {
     if (
       (await Section.exists({ grade: id })) ||
-      (await User.exists({ grade: id }))
+      (await User.exists({ grade: id })) ||
+      (await Test.exists({ grade: id }))
     )
-      return badRequest("Grade is in use and cannot be deleted", 409);
+      return badRequest(
+        "Grade is in use by sections, accounts, or exam history and cannot be deleted",
+        409,
+      );
     await Grade.findByIdAndDelete(id);
   } else if (kind === "section") {
     if (
       (await User.exists({ section: id })) ||
-      (await TeacherAssignment.exists({ section: id }))
+      (await TeacherAssignment.exists({ section: id })) ||
+      (await Test.exists({ section: id }))
     )
-      return badRequest("Section is in use and cannot be deleted", 409);
+      return badRequest(
+        "Section is in use by accounts, teacher assignments, or exam history and cannot be deleted",
+        409,
+      );
     await Section.findByIdAndDelete(id);
   } else {
     const subject: any = await Subject.findById(id).select("name").lean();
