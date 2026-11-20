@@ -65,7 +65,7 @@ export async function getUserFromRequest() {
   try {
     const payload = verifyToken(token) as { id: string; role: string };
     const user = await User.findById(payload.id).lean();
-    if (!user) return null;
+    if (!user || (user as any).isActive === false) return null;
     return {
       id: String((user as any)._id),
       role: (user as any).role,
