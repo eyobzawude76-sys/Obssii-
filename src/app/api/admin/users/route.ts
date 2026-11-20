@@ -161,6 +161,10 @@ export async function PATCH(req: NextRequest) {
     return errorResponse("Account not found", 404);
   const { id, gradeId, sectionId, ...fields } = parsed.data;
   const update: Record<string, unknown> = { ...fields };
+  if (typeof fields.isActive === "boolean") {
+    update.suspendedAt = fields.isActive ? null : new Date();
+    update.suspendedBy = fields.isActive ? null : auth.user.id;
+  }
   if (typeof fields.email === "string")
     update.email = fields.email.toLowerCase();
   if (
@@ -215,9 +219,19 @@ export async function DELETE(req: NextRequest) {
   if (!parsed.success || !mongoose.isValidObjectId(parsed.data?.id))
     return errorResponse("Valid account id is required");
   await dbConnect();
-  const user = await User.findOneAndDelete({
-    _id: parsed.data.id,
-    role: { $in: accountRoles },
-  }).select("_id");
-  return NextResponse.json({ success: !!user });
+  const user = await User.findOneAndUpdate(
+    { _id: parsed.data.id, role: { $in: accountRoles } },
+    {
+      $set: {
+        isActive: false,
+        suspendedAt: new Date(),
+        suspendedBy: auth.user.id,
+      },
+    },
+    { new: true },
+  ).select("_id isActive");
+  return NextResponse.json({
+    success: !!user,
+    deactivated: !!user,
+  });
 }

@@ -1,7 +1,6 @@
 "use client";
 import {
   BookOpenIcon,
-  FolderIcon,
   HomeIcon,
   LogOutIcon,
   UsersIcon,
@@ -17,7 +16,6 @@ const navLinks = [
   { name: "Dashboard", href: "/admin", icon: HomeIcon },
   { name: "Teachers & Students", href: "/admin/users", icon: UsersIcon },
   { name: "Academic Structure", href: "/admin/academic", icon: BookOpenIcon },
-  { name: "Assign Tests", href: "/admin/assignments", icon: FolderIcon },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -44,32 +42,30 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen w-full bg-background">
-      {/* Fixed Sidebar */}
-      <aside className="fixed inset-y-0 left-0 flex flex-col w-20 md:w-64 bg-primary/10 border-r border-border items-center md:items-stretch py-6 gap-4">
-        {/* Logo */}
-        <div className="flex flex-col items-center justify-center mb-4 px-2">
+      <aside className="fixed inset-y-0 left-0 flex w-20 flex-col items-center gap-4 border-r border-border bg-primary/10 py-6 md:w-64 md:items-stretch">
+        <div className="mb-4 flex flex-col items-center justify-center px-2">
           <Image
             src="/images/clg-logo.png"
             alt="College Logo"
             width={50}
             height={50}
-            className="rounded-lg shadow-sm mb-2"
+            className="mb-2 rounded-lg shadow-sm"
           />
-          <div className="hidden md:flex flex-col items-center">
+          <div className="hidden flex-col items-center md:flex">
             <span className="text-xl font-bold text-primary">
               EDU-<span className="text-red-600">XIE</span>
             </span>
-            <span className="text-xs text-primary/80 font-medium">ADMIN</span>
+            <span className="text-xs font-medium text-primary/80">ADMIN</span>
           </div>
-          <span className="md:hidden text-xs font-bold text-primary">AD</span>
+          <span className="text-xs font-bold text-primary md:hidden">AD</span>
         </div>
-        <nav className="flex-1 flex flex-col gap-2">
+        <nav className="flex flex-1 flex-col gap-2">
           {navLinks.map(({ name, href, icon: Icon }) => (
             <Link
               href={href}
               key={href}
               className={cn(
-                "group flex items-center gap-2 px-2.5 py-2 md:px-5 md:py-3 rounded-lg transition hover:bg-primary hover:text-primary-foreground text-muted-foreground font-medium",
+                "group flex items-center gap-2 rounded-lg px-2.5 py-2 font-medium text-muted-foreground transition hover:bg-primary hover:text-primary-foreground md:px-5 md:py-3",
               )}
             >
               <Icon className="size-6 shrink-0 opacity-80 group-hover:opacity-100" />
@@ -77,7 +73,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </Link>
           ))}
         </nav>
-        <div className="flex-0 flex flex-col gap-2 px-2.5 md:px-5 mt-6">
+        <div className="mt-6 flex flex-col gap-2 px-2.5 md:px-5">
           <Button
             variant="secondary"
             className="w-full"
@@ -92,26 +88,23 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               }
             }}
           >
-            <LogOutIcon className="size-5 mr-2" />
+            <LogOutIcon className="mr-2 size-5" />
             <span className="hidden md:inline">Logout</span>
           </Button>
         </div>
       </aside>
-      {/* Main Content Area */}
-      <div className="flex flex-col min-w-0 ml-20 md:ml-64">
-        {/* Topbar */}
-        <header className="flex items-center justify-between px-8 py-4 border-b border-border bg-background/80 sticky top-0 z-10 backdrop-blur font-sans">
-          <span className="text-lg font-semibold text-muted-foreground tracking-tight hidden md:inline">
+      <div className="ml-20 flex min-w-0 flex-col md:ml-64">
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/80 px-8 py-4 font-sans backdrop-blur">
+          <span className="hidden text-lg font-semibold tracking-tight text-muted-foreground md:inline">
             Admin Dashboard
           </span>
           <div className="flex items-center gap-3">
-            {/* Add theme toggle/profile avatar here later */}
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-300 to-fuchsia-300 flex items-center justify-center font-bold text-primary uppercase border border-border">
+            <div className="flex size-9 items-center justify-center rounded-full border border-border bg-gradient-to-br from-blue-300 to-fuchsia-300 font-bold uppercase text-primary">
               A
             </div>
           </div>
         </header>
-        <main className="flex-1 px-2 md:px-8 py-8 bg-background font-sans animate-fadeInUp">
+        <main className="flex-1 animate-fadeInUp bg-background px-2 py-8 font-sans md:px-8">
           {children}
         </main>
       </div>
