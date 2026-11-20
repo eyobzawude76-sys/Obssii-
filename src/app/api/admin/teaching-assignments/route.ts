@@ -106,6 +106,9 @@ export async function DELETE(req: NextRequest) {
   if (!assignment)
     return NextResponse.json({ success: false });
 
+  const subjectRecord = await Subject.findById(assignment.subject)
+    .select("name")
+    .lean();
   const linkedTest = await Test.exists({
     $or: [
       { assignment: assignment._id },
@@ -115,6 +118,16 @@ export async function DELETE(req: NextRequest) {
         section: assignment.section,
         subjectId: assignment.subject,
       },
+      ...(subjectRecord?.name
+        ? [
+            {
+              teacher: assignment.teacher,
+              grade: assignment.grade,
+              section: assignment.section,
+              subject: subjectRecord.name,
+            },
+          ]
+        : []),
     ],
   });
   if (linkedTest)
