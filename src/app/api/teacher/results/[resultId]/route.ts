@@ -21,7 +21,14 @@ export async function GET(
 
   // Get the result and populate student and test info
   const result: any = await Result.findById(resultId)
-    .populate("student", "name email studentId")
+    .populate({
+      path: "student",
+      select: "name email studentId grade section",
+      populate: [
+        { path: "grade", select: "level" },
+        { path: "section", select: "name" },
+      ],
+    })
     .populate("test", "title subject teacher assignment")
     .lean();
 
@@ -70,9 +77,8 @@ export async function GET(
       questionNumber: q.questionNumber,
       question: decryptString(q.encryptedQuestion),
       options: q.encryptedOptions.map((opt: string) => decryptString(opt)),
-      correctAnswerIndex: q.correctAnswerIndex,
       studentAnswerIndex: studentAnswer?.chosenOption ?? null,
-      isCorrect: studentAnswer?.isCorrect ?? false,
+      isCorrect: studentAnswer?.isCorrect ?? null,
       explanation: q.explanation || null,
     };
   });
@@ -138,10 +144,12 @@ export async function PATCH(
         { error: "Finalized marks are locked" },
         { status: 409 },
       );
+    const seenMarks = new Set<number>();
     for (const mark of body.marks) {
       if (
         !Number.isInteger(mark.questionNumber) ||
-        typeof mark.isCorrect !== "boolean"
+        typeof mark.isCorrect !== "boolean" ||
+        seenMarks.has(mark.questionNumber)
       )
         return NextResponse.json(
           {
@@ -150,10 +158,13 @@ export async function PATCH(
           },
           { status: 400 },
         );
+      seenMarks.add(mark.questionNumber);
       const answer = result.answers.find(
         (item: any) => item.questionNumber === mark.questionNumber,
       );
-      if (answer) answer.isCorrect = mark.isCorrect;
+      if (!answer)
+        return NextResponse.json({ error: "Mark does not match a submitted answer." }, { status: 400 });
+      answer.isCorrect = mark.isCorrect;
     }
     await result.save();
   }
@@ -167,6 +178,11 @@ export async function PATCH(
       testId: test._id,
     }).lean();
     const total = questionDoc?.questions?.length || result.totalQuestions;
+    const unansweredForMarking = (result.answers as any[]).filter(
+      (answer) => answer.chosenOption !== undefined && answer.chosenOption !== null && typeof answer.isCorrect !== "boolean",
+    );
+    if (unansweredForMarking.length > 0)
+      return NextResponse.json({ error: "Mark every answered question before finalizing." }, { status: 409 });
     result.totalQuestions = total;
     result.correctAnswers = (result.answers as any[]).filter(
       (answer) => answer.isCorrect === true,
