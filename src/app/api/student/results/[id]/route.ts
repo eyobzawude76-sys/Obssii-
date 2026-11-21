@@ -21,6 +21,7 @@ export async function GET(
   const res: any = await Result.findOne({
     _id: id,
     student: auth.user.id,
+    testCompleted: true,
     published: true,
     finalized: true,
   }).lean();
