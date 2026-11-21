@@ -77,16 +77,17 @@ export default function TeacherResultDetailPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
-          action === "save"
-            ? {
+          action === "publish"
+            ? { publish: true }
+            : {
                 marks: data.questions
                   .filter((question) => question.studentAnswerIndex !== null)
                   .map((question) => ({
                     questionNumber: question.questionNumber,
                     isCorrect: question.isCorrect,
                   })),
-              }
-            : { [action]: true },
+                ...(action === "finalize" ? { finalize: true } : {}),
+              },
         ),
       });
       const payload = await response.json();
