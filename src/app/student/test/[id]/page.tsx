@@ -13,6 +13,7 @@ export default function StudentTestPage() {
   const [options, setOptions] = useState<string[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [testTitle, setTestTitle] = useState<string>("");
+  const [studentInfo, setStudentInfo] = useState<{ name?: string; grade?: { level?: number }; section?: { name?: string } } | null>(null);
   const [totalQuestions, setTotalQuestions] = useState<number>(0);
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const [deadlineAt, setDeadlineAt] = useState<number | null>(null);
@@ -60,6 +61,7 @@ export default function StudentTestPage() {
         throw new Error(data?.error || "Could not load exam instructions.");
       }
 
+      setStudentInfo(data?.student || null);
       if (data?.terms?.length > 0) {
         setTerms(data.terms);
         setTestTitle(data.testTitle || "Test");
@@ -473,13 +475,22 @@ export default function StudentTestPage() {
                 </h1>
               </div>
 
-              {/* Test Info Bar */}
+              {/* Student and Test Info Bar */}
               <div className="flex flex-col md:flex-row items-center justify-between gap-3 bg-green-50 rounded-lg px-4 py-3 border border-green-200">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-green-600" />
-                  <span className="font-semibold text-green-900">
-                    {testTitle || "Loading..."}
-                  </span>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-green-600" />
+                    <span className="font-semibold text-green-900">
+                      {testTitle || "Loading..."}
+                    </span>
+                  </div>
+                  {studentInfo && (
+                    <div className="text-xs text-green-800">
+                      {studentInfo.name || "Student"}
+                      {studentInfo.grade?.level ? " · Grade " + studentInfo.grade.level : ""}
+                      {studentInfo.section?.name ? " · Section " + studentInfo.section.name : ""}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-6">
