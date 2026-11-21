@@ -110,9 +110,11 @@ export async function POST(
     );
   }
 
-  const questionSet = await Question.findOne({ testId })
+  const questionSet = (await Question.findOne({ testId })
     .select("questions.questionNumber")
-    .lean();
+    .lean()) as unknown as {
+    questions?: Array<{ questionNumber: number }>;
+  } | null;
   if (!questionSet) {
     return NextResponse.json(
       { error: "Exam questions are unavailable." },
