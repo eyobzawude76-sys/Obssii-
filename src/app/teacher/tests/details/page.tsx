@@ -8,7 +8,6 @@ type QRow = {
   questionNumber: number;
   question: string;
   options: string[];
-  answerIndex: number;
 };
 
 export default function TeacherTestDetailsPage() {
@@ -51,7 +50,6 @@ export default function TeacherTestDetailsPage() {
         questionNumber: nextNum,
         question: "",
         options: ["", "", "", ""],
-        answerIndex: 0,
       },
     ]);
   };
@@ -193,22 +191,7 @@ export default function TeacherTestDetailsPage() {
                           )
                         }
                       />
-                      <label className="flex items-center gap-1 text-xs">
-                        <input
-                          type="radio"
-                          checked={r.answerIndex === idx}
-                          onChange={() =>
-                            setRows((prev) =>
-                              prev.map((x) =>
-                                x.questionNumber === r.questionNumber
-                                  ? { ...x, answerIndex: idx }
-                                  : x,
-                              ),
-                            )
-                          }
-                        />{" "}
-                        Correct
-                      </label>
+
                     </div>
                   );
                 })}
