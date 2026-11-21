@@ -152,7 +152,7 @@ export default function TeacherResultsPage() {
         const submittedDate = new Date(result.submittedAt);
         worksheet.addRow({
           name: result.student.name,
-          studentId: result.student._id || "-",
+          studentId: result.student.studentId || "-",
           email: result.student.email,
           testName: result.test.title,
           subject: result.test.subject,
@@ -324,7 +324,7 @@ export default function TeacherResultsPage() {
                     {result.student.name}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {result.student._id || "-"}
+                    {result.student.studentId || "-"}
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
