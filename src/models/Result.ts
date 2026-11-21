@@ -27,6 +27,7 @@ const ResultSchema = new mongoose.Schema({
   attemptNumber: { type: Number, default: 1 },
   startedAt: { type: Date },
   finalized: { type: Boolean, default: false },
+  gradingStarted: { type: Boolean, default: false },
   published: { type: Boolean, default: false },
 });
 
