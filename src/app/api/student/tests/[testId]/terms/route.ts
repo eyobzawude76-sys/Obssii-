@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getStudentExamAccess } from "@/lib/student-exam-access";
 import { getAuthOrThrow } from "@/lib/with-auth";
+import User from "@/models/User";
 
 export async function GET(
   _req: Request,
@@ -18,7 +19,14 @@ export async function GET(
     );
   }
 
+  const student = await User.findById(auth.user.id)
+    .select("name grade section")
+    .populate("grade", "level")
+    .populate("section", "name")
+    .lean();
+
   return NextResponse.json({
+    student,
     testTitle: access.test.title,
     terms: access.test.termsAndConditions || [],
   });
