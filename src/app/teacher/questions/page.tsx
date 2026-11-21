@@ -85,17 +85,6 @@ async function downloadWordTemplate() {
               text: "D) 4",
               spacing: { after: 50 },
             }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "",
-                  bold: true,
-                  color: "0066CC",
-                }),
-              ],
-              spacing: { after: 300 },
-            }),
-
             // Example 2
             new Paragraph({
               children: [
@@ -122,17 +111,6 @@ async function downloadWordTemplate() {
               text: "D) Rome",
               spacing: { after: 50 },
             }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "",
-                  bold: true,
-                  color: "0066CC",
-                }),
-              ],
-              spacing: { after: 300 },
-            }),
-
             // Example 3
             new Paragraph({
               children: [
