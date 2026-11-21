@@ -81,7 +81,7 @@ export default function TeacherResultDetailPage() {
             ? { publish: true }
             : {
                 marks: data.questions
-                  .filter((question) => question.studentAnswerIndex !== null)
+                  .filter((question) => question.studentAnswerIndex !== null && typeof question.isCorrect === "boolean")
                   .map((question) => ({
                     questionNumber: question.questionNumber,
                     isCorrect: question.isCorrect,
