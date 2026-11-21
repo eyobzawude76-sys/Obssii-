@@ -47,27 +47,16 @@ function parseCsvQuestions(text: string) {
     find("optionb", "b"),
     find("optionc", "c"),
     find("optiond", "d"),
-    find("correctanswer", "answer", "correct"),
   ];
   if (indexes.some((index) => index < 0)) return [];
   return rows
     .map((cells) => {
-      const [question, a, b, c, d, answer] = indexes.map(
+      const [question, a, b, c, d] = indexes.map(
         (index) => cells[index] || "",
       );
-      const answerIndex = /^[a-d]$/i.test(answer)
-        ? answer.toUpperCase().charCodeAt(0) - 65
-        : Number(answer) - 1;
-      return { question, options: [a, b, c, d], answerIndex };
+      return { question, options: [a, b, c, d] };
     })
-    .filter(
-      (item) =>
-        item.question &&
-        item.options.every(Boolean) &&
-        Number.isInteger(item.answerIndex) &&
-        item.answerIndex >= 0 &&
-        item.answerIndex < 4,
-    );
+    .filter((item) => item.question && item.options.every(Boolean));
 }
 
 async function readFileToText(
@@ -194,93 +183,57 @@ async function readFileToText(
 }
 
 function parseMcqsFromText(text: string, fileType: string = "txt") {
-  const out: { question: string; options: string[]; answerIndex: number }[] =
-    [];
+  const out: { question: string; options: string[] }[] = [];
   const normalized = text.replace(/\u00A0/g, " ").replace(/\r/g, "");
 
-  // If it's PowerPoint, use slide-based parsing
   if (fileType === "powerpoint") {
-    // Split by double newlines (slide boundaries)
     const slides = normalized.split(/\n\n+/).filter(Boolean);
-
     for (const slide of slides) {
       const lines = slide
         .split("\n")
-        .map((l) => l.trim())
+        .map((line) => line.trim())
         .filter(Boolean);
-      if (lines.length < 5) continue; // Need at least question + 4 options
-
-      // First line is the question
-      const questionText = lines[0];
-
-      // Extract options (A), B), C), D))
+      if (lines.length < 5) continue;
+      const question = lines[0];
       const options: string[] = [];
-      let answerIndex = 0;
-
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i];
-
-        // Check if this is an answer line
-        if (/^answer\s*:\s*([A-D])/i.test(line)) {
-          const match = line.match(/^answer\s*:\s*([A-D])/i);
-          if (match) {
-            answerIndex = match[1].toUpperCase().charCodeAt(0) - 65;
-          }
-          continue;
-        }
-
-        // Check if this is an option line
-        const optionMatch = line.match(/^([A-D])\)\s*(.+)/i);
-        if (optionMatch && options.length < 4) {
-          options.push(optionMatch[2].trim());
-        }
+      for (const line of lines.slice(1)) {
+        const optionMatch = line.match(/^([A-D])[).]\s*(.+)/i);
+        if (optionMatch && options.length < 4) options.push(optionMatch[2].trim());
       }
-
-      // Add question if we have all 4 options
-      if (questionText && options.length === 4) {
-        out.push({ question: questionText, options, answerIndex });
-      }
+      if (question && options.length === 4) out.push({ question, options });
     }
-
     if (out.length > 0) return out;
   }
 
-  // Standard Q1. format parsing
   const re =
-    /Q\s*(\d+)\.\s*([\s\S]*?)\n+\s*A\)\s*([\s\S]*?)\n+\s*B\)\s*([\s\S]*?)\n+\s*C\)\s*([\s\S]*?)\n+\s*D\)\s*([\s\S]*?)\n+\s*Answer\s*:\s*([A-D])/gi;
-  for (let m = re.exec(normalized); m !== null; m = re.exec(normalized)) {
-    const q = m[2].trim();
-    const opts = [m[3], m[4], m[5], m[6]].map((s) => s.trim());
-    const ans = (m[7] || "A").toUpperCase().charCodeAt(0) - 65;
-    if (q && opts.every(Boolean))
-      out.push({ question: q, options: opts, answerIndex: ans });
+    /Q\s*(\d+)\.\s*([\s\S]*?)\n+\s*A\)\s*([\s\S]*?)\n+\s*B\)\s*([\s\S]*?)\n+\s*C\)\s*([\s\S]*?)\n+\s*D\)\s*([\s\S]*?)(?=\n\s*Q\s*\d+\.|$)/gi;
+  for (let match = re.exec(normalized); match !== null; match = re.exec(normalized)) {
+    const question = match[2].trim();
+    const options = [match[3], match[4], match[5], match[6]]
+      .map((option) => option.trim())
+      .map((option) => option.replace(/\n+\s*Answer\s*:\s*[A-D]\s*$/i, "").trim());
+    if (question && options.every(Boolean)) out.push({ question, options });
   }
   if (out.length > 0) return out;
 
-  // Fallback: block parsing for simpler cases
   const blocks = normalized
     .split(/\n\s*\n/)
-    .map((b) => b.trim())
+    .map((block) => block.trim())
     .filter(Boolean);
   for (const block of blocks) {
     const lines = block
       .split(/\n/)
-      .map((l) => l.trim())
+      .map((line) => line.trim())
       .filter(Boolean);
     if (lines.length < 5) continue;
-    const qline = lines[0].replace(/^Q\d+\.?\s*/i, "");
-    const opts: string[] = [];
-    for (let i = 1; i <= 4 && i < lines.length; i++) {
-      opts.push(lines[i].replace(/^[A-D][).-]\s*/, ""));
-    }
-    const ansLine = lines.find((l) => /^answer\s*:/i.test(l));
-    let answerIndex = 0;
-    if (ansLine) {
-      const mm = ansLine.match(/[A-D]/i);
-      if (mm) answerIndex = mm[0].toUpperCase().charCodeAt(0) - 65;
-    }
-    if (opts.length === 4)
-      out.push({ question: qline, options: opts, answerIndex });
+    const question = lines[0].replace(/^Q\d+\.?\s*/i, "");
+    const options = lines
+      .slice(1)
+      .filter((line) => !/^answer\s*:/i.test(line))
+      .slice(0, 4)
+      .map((line) => line.replace(/^[A-D][).\-]\s*/i, ""));
+    if (question && options.length === 4 && options.every(Boolean))
+      out.push({ question, options });
   }
   return out;
 }
@@ -337,7 +290,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "No valid MCQs detected. CSV requires question, optionA, optionB, optionC, optionD, correctAnswer columns. Text uploads use Q1., A), B), C), D), Answer: X.",
+            "No valid MCQs detected. CSV requires question, optionA, optionB, optionC, optionD columns. Text uploads use Q1., A), B), C), D) only.",
         },
         { status: 400 },
       );
@@ -354,7 +307,6 @@ export async function POST(req: NextRequest) {
         questionNumber: idx + 1,
         encryptedQuestion: encryptString(q.question),
         encryptedOptions: q.options.map(encryptString),
-        correctAnswerIndex: q.answerIndex,
       })),
     } as any;
 
