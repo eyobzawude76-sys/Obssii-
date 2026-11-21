@@ -41,7 +41,7 @@ jobs:
         run: npm ci --include=dev
       - name: Run release and database integrity tests
         run: npm test
-      - name: Run Biome checks
-        run: npm run lint -- --max-diagnostics=200
+      - name: Run Biome lint checks
+        run: npx biome lint --max-diagnostics=200
       - name: Build Next.js application
         run: npm run build
