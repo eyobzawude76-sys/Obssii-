@@ -159,17 +159,6 @@ async function downloadWordTemplate() {
               text: "D) Yellow",
               spacing: { after: 50 },
             }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "Answer: C",
-                  bold: true,
-                  color: "0066CC",
-                }),
-              ],
-              spacing: { after: 300 },
-            }),
-
             // Footer note
             new Paragraph({
               children: [
@@ -401,8 +390,7 @@ export default function TeacherQuestionsPage() {
           <span className="underline ml-1">browse</span>
         </div>
         <div className="text-xs text-blue-700/80">
-          CSV columns: question, optionA, optionB, optionC, optionD,
-          no correctAnswer column
+          CSV columns: question, optionA, optionB, optionC, optionD (no answer key)
         </div>
         <input
           type="file"
