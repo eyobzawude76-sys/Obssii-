@@ -41,7 +41,7 @@ export async function GET(req: Request) {
   })
     .populate("student", "name email studentId")
     .populate("test", "title subject totalQuestions")
-    .select("student test totalQuestions correctAnswers percentage submittedAt")
+    .select("student test totalQuestions correctAnswers percentage submittedAt finalized published")
     .sort({ submittedAt: -1 })
     .lean();
 
