@@ -38,7 +38,7 @@ jobs:
           node-version: 22
           cache: npm
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --include=dev
       - name: Run release and database integrity tests
         run: npm test
       - name: Run Biome checks
