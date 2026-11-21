@@ -211,12 +211,6 @@ export default function TeacherResultDetailPage() {
 
       // Add questions
       data.questions.forEach((q) => {
-        const correctAnswer =
-          q.correctAnswerIndex !== null
-            ? `${getOptionLabel(q.correctAnswerIndex)}. ${
-                q.options[q.correctAnswerIndex]
-              }`
-            : "N/A";
         const studentAnswer =
           q.studentAnswerIndex !== null
             ? `${getOptionLabel(q.studentAnswerIndex)}. ${
@@ -226,9 +220,11 @@ export default function TeacherResultDetailPage() {
         const status =
           q.studentAnswerIndex === null
             ? "Unanswered"
-            : q.isCorrect
-              ? "Correct"
-              : "Incorrect";
+            : q.isCorrect === null
+              ? "Not Marked"
+              : q.isCorrect
+                ? "Right"
+                : "Wrong";
 
         const row = worksheet.addRow([
           q.questionNumber,
@@ -241,14 +237,14 @@ export default function TeacherResultDetailPage() {
 
         // Color code the status
         const statusCell = row.getCell(5);
-        if (status === "Correct") {
+        if (status === "Right") {
           statusCell.fill = {
             type: "pattern",
             pattern: "solid",
             fgColor: { argb: "FF10B981" },
           };
           statusCell.font = { color: { argb: "FFFFFFFF" }, bold: true };
-        } else if (status === "Incorrect") {
+        } else if (status === "Wrong") {
           statusCell.fill = {
             type: "pattern",
             pattern: "solid",
@@ -368,7 +364,7 @@ export default function TeacherResultDetailPage() {
       <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-white p-4">
         <span className="font-medium">
           Marks: {data.finalized ? "Finalized" : "Review required"} · Result:{" "}
-          {data.published ? "Published" : "Unpublished"}
+          {data.published ? "Published" : "Unpublished"} · {pendingMarks} answer(s) awaiting marking
         </span>
         <div className="ml-auto flex flex-wrap gap-2">
           <Button
@@ -520,16 +516,16 @@ export default function TeacherResultDetailPage() {
           <div
             key={q.questionNumber}
             className={`bg-white rounded-2xl shadow-md border-2 p-6 ${
-              q.isCorrect ? "border-green-300" : "border-red-300"
+              q.isCorrect === true ? "border-green-300" : q.isCorrect === false ? "border-red-300" : "border-gray-300"
             }`}
           >
             {/* Question Header */}
             <div className="flex items-start gap-3 mb-4">
-              {q.isCorrect ? (
+              {q.isCorrect === true ? (
                 <CheckCircle2 className="w-6 h-6 text-green-600 mt-1 shrink-0" />
-              ) : (
+              ) : q.isCorrect === false ? (
                 <XCircle className="w-6 h-6 text-red-600 mt-1 shrink-0" />
-              )}
+              ) : null}
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-sm font-semibold text-gray-600">
@@ -537,9 +533,9 @@ export default function TeacherResultDetailPage() {
                   </span>
                   <span
                     className={`text-xs px-2 py-1 rounded-full font-semibold ${
-                      q.isCorrect
+                      q.isCorrect === true
                         ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
+                        : q.isCorrect === false ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700"
                     }`}
                   >
                     {q.isCorrect === null ? (q.studentAnswerIndex === null ? "Unanswered" : "Not marked") : q.isCorrect ? "✓ Right" : "✗ Wrong"}
@@ -555,17 +551,17 @@ export default function TeacherResultDetailPage() {
               <div className="ml-9 mt-4 flex gap-2">
                 <Button
                   size="sm"
-                  variant={q.isCorrect ? "default" : "outline"}
+                  variant={q.isCorrect === true ? "default" : "outline"}
                   onClick={() => updateMark(q.questionNumber, true)}
                 >
-                  ✓ Correct
+                  ✓ Right
                 </Button>
                 <Button
                   size="sm"
-                  variant={!q.isCorrect ? "destructive" : "outline"}
+                  variant={q.isCorrect === false ? "destructive" : "outline"}
                   onClick={() => updateMark(q.questionNumber, false)}
                 >
-                  X Incorrect
+                  ✗ Wrong
                 </Button>
               </div>
             )}
