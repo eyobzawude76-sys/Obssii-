@@ -36,7 +36,6 @@ export async function GET(
     questionNumber: q.questionNumber,
     question: decryptString(q.encryptedQuestion),
     options: q.encryptedOptions.map((s: string) => decryptString(s)),
-    answerIndex: q.correctAnswerIndex,
   }));
   return NextResponse.json({ questions: list });
 }
@@ -84,7 +83,7 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
-  const { questionNumber, question, options, answerIndex } = body || {};
+  const { questionNumber, question, options } = body || {};
   if (
     !Number.isInteger(questionNumber) ||
     questionNumber < 1 ||
@@ -92,10 +91,7 @@ export async function PATCH(
     !question.trim() ||
     !Array.isArray(options) ||
     options.length !== 4 ||
-    options.some((option) => typeof option !== "string" || !option.trim()) ||
-    !Number.isInteger(answerIndex) ||
-    answerIndex < 0 ||
-    answerIndex > 3
+    options.some((option) => typeof option !== "string" || !option.trim())
   ) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
@@ -114,13 +110,13 @@ export async function PATCH(
     questionNumber,
     encryptedQuestion: encryptString(question),
     encryptedOptions: options.map((s: string) => encryptString(s)),
-    correctAnswerIndex: typeof answerIndex === "number" ? answerIndex : 0,
   } as any;
   if (idx >= 0) {
     (doc.questions as any[])[idx] = {
       ...(doc.questions as any[])[idx],
       ...payload,
     };
+    delete (doc.questions as any[])[idx].correctAnswerIndex;
   } else {
     (doc.questions as any[]).push(payload);
   }
