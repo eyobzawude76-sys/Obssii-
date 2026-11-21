@@ -136,42 +136,6 @@ async function readFileToText(
         }
       }
 
-      // Also extract notes (where answers are stored)
-      const notesFiles: string[] = [];
-      zip.forEach((relativePath) => {
-        if (
-          relativePath.startsWith("ppt/notesSlides/notesSlide") &&
-          relativePath.endsWith(".xml")
-        ) {
-          notesFiles.push(relativePath);
-        }
-      });
-
-      notesFiles.sort((a, b) => {
-        const numA = parseInt(a.match(/notesSlide(\d+)\.xml/)?.[1] || "0", 10);
-        const numB = parseInt(b.match(/notesSlide(\d+)\.xml/)?.[1] || "0", 10);
-        return numA - numB;
-      });
-
-      for (const noteFile of notesFiles) {
-        const noteXml = await zip.file(noteFile)?.async("text");
-        if (!noteXml) continue;
-
-        const textMatches = noteXml.matchAll(/<a:t[^>]*>([\s\S]*?)<\/a:t>/g);
-        for (const match of textMatches) {
-          const text = match[1]
-            .replace(/&lt;/g, "<")
-            .replace(/&gt;/g, ">")
-            .replace(/&amp;/g, "&")
-            .replace(/&quot;/g, '"')
-            .replace(/&apos;/g, "'")
-            .trim();
-          if (text?.toLowerCase().startsWith("answer")) {
-            extractedText += `${text}\n`;
-          }
-        }
-      }
-
       return { text: extractedText.trim(), type: "powerpoint" };
     } catch (e: any) {
       throw new Error(
