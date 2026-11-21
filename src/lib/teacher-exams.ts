@@ -26,6 +26,9 @@ export type AttemptRecord = {
   correctAnswers?: number;
   percentage?: number;
   autoSubmitted?: boolean;
+  finalized?: boolean;
+  gradingStarted?: boolean;
+  published?: boolean;
   submittedAt?: Date;
   save: () => Promise<unknown>;
 };
@@ -63,6 +66,9 @@ export async function finalizeAttemptIfExpired(
   result.answers = answers;
   result.correctAnswers = 0;
   result.percentage = 0;
+  result.finalized = false;
+  result.gradingStarted = false;
+  result.published = false;
   result.testCompleted = true;
   result.autoSubmitted = true;
   result.submittedAt = new Date(deadline);
