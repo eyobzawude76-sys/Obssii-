@@ -20,9 +20,8 @@ type QuestionReview = {
   questionNumber: number;
   question: string;
   options: string[];
-  correctAnswerIndex: number;
   studentAnswerIndex: number | null;
-  isCorrect: boolean;
+  isCorrect: boolean | null;
   explanation: string | null;
 };
 
@@ -32,6 +31,8 @@ type DetailedResult = {
     name: string;
     email: string;
     studentId?: string;
+    grade?: { level?: number } | null;
+    section?: { name?: string } | null;
   };
   test: {
     _id: string;
@@ -193,7 +194,7 @@ export default function TeacherResultDetailPage() {
       const headerRow = worksheet.addRow([
         "Q#",
         "Question",
-        "Correct Answer",
+        "Teacher Mark",
         "Student's Answer",
         "Status",
         "Explanation",
@@ -232,7 +233,7 @@ export default function TeacherResultDetailPage() {
         const row = worksheet.addRow([
           q.questionNumber,
           q.question,
-          correctAnswer,
+          q.isCorrect === null ? "Not Marked" : q.isCorrect ? "Right" : "Wrong",
           studentAnswer,
           status,
           q.explanation || "-",
@@ -306,7 +307,8 @@ export default function TeacherResultDetailPage() {
     }
   };
 
-  const wrongAnswers = data?.questions.filter((q) => !q.isCorrect) || [];
+  const wrongAnswers = data?.questions.filter((q) => q.isCorrect === false || q.studentAnswerIndex === null) || [];
+  const pendingMarks = data?.questions.filter((q) => q.studentAnswerIndex !== null && q.isCorrect === null).length || 0;
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto">
@@ -413,6 +415,18 @@ export default function TeacherResultDetailPage() {
                 <p className="font-medium">{data.student.email}</p>
               </div>
             </div>
+            {data.student.grade?.level && (
+              <div className="flex items-center gap-3">
+                <Award className="w-5 h-5 text-violet-600" />
+                <div><p className="text-sm text-muted-foreground">Grade</p><p className="font-medium">{data.student.grade.level}</p></div>
+              </div>
+            )}
+            {data.student.section?.name && (
+              <div className="flex items-center gap-3">
+                <Award className="w-5 h-5 text-violet-600" />
+                <div><p className="text-sm text-muted-foreground">Section</p><p className="font-medium">{data.student.section.name}</p></div>
+              </div>
+            )}
             {data.student.studentId && (
               <div className="flex items-center gap-3">
                 <Award className="w-5 h-5 text-violet-600" />
@@ -484,11 +498,11 @@ export default function TeacherResultDetailPage() {
           <div className="flex items-center gap-2 mb-2">
             <XCircle className="w-5 h-5 text-red-600" />
             <h3 className="font-semibold text-red-900">
-              Questions Answered Incorrectly
+              Questions Marked Wrong / Unanswered
             </h3>
           </div>
           <p className="text-sm text-red-800">
-            Student got {wrongAnswers.length} question(s) wrong:{" "}
+            {wrongAnswers.length} question(s) are wrong or unanswered:{" "}
             <span className="font-semibold">
               {wrongAnswers.map((q) => `Q${q.questionNumber}`).join(", ")}
             </span>
@@ -528,7 +542,7 @@ export default function TeacherResultDetailPage() {
                         : "bg-red-100 text-red-700"
                     }`}
                   >
-                    {q.isCorrect ? "✓ Correct" : "X Incorrect"}
+                    {q.isCorrect === null ? (q.studentAnswerIndex === null ? "Unanswered" : "Not marked") : q.isCorrect ? "✓ Right" : "✗ Wrong"}
                   </span>
                 </div>
                 <p className="text-lg font-medium text-gray-900">
@@ -559,19 +573,15 @@ export default function TeacherResultDetailPage() {
             {/* Options */}
             <div className="space-y-3 ml-9">
               {q.options.map((option, idx) => {
-                const isCorrect = idx === q.correctAnswerIndex;
                 const isStudentAnswer = idx === q.studentAnswerIndex;
-                const isWrongAnswer = isStudentAnswer && !isCorrect;
 
                 return (
                   <div
                     key={String.fromCharCode(65 + idx)}
                     className={`p-4 rounded-lg border-2 ${
-                      isCorrect
-                        ? "bg-green-50 border-green-400"
-                        : isWrongAnswer
-                          ? "bg-red-50 border-red-400"
-                          : "bg-gray-50 border-gray-200"
+                      isStudentAnswer
+                        ? "bg-blue-50 border-blue-400"
+                        : "bg-gray-50 border-gray-200"
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -579,19 +589,9 @@ export default function TeacherResultDetailPage() {
                         {getOptionLabel(idx)}.
                       </span>
                       <span className="flex-1 text-gray-800">{option}</span>
-                      {isCorrect && (
-                        <span className="text-xs font-semibold text-green-700 bg-green-200 px-2 py-1 rounded">
-                          Correct Answer
-                        </span>
-                      )}
-                      {isWrongAnswer && (
-                        <span className="text-xs font-semibold text-red-700 bg-red-200 px-2 py-1 rounded">
+                      {isStudentAnswer && (
+                        <span className="text-xs font-semibold text-blue-700 bg-blue-200 px-2 py-1 rounded">
                           Student's Answer
-                        </span>
-                      )}
-                      {isStudentAnswer && isCorrect && (
-                        <span className="text-xs font-semibold text-green-700 bg-green-200 px-2 py-1 rounded">
-                          Student's Answer ✓
                         </span>
                       )}
                     </div>
