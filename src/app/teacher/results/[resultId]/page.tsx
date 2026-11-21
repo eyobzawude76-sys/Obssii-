@@ -178,8 +178,8 @@ export default function TeacherResultDetailPage() {
       const scoreSummaryRow = worksheet.addRow(["Score Summary"]);
       scoreSummaryRow.font = { bold: true, size: 14 };
 
-      worksheet.addRow(["Overall Score:", `${data.percentage}%`]);
-      worksheet.addRow(["Correct Answers:", data.correctAnswers]);
+      worksheet.addRow(["Overall Score:", data.finalized ? `${data.finalized ? `${data.percentage}%` : "Pending"}` : "Pending"]);
+      worksheet.addRow(["Correct Answers:", data.finalized ? data.correctAnswers : "Pending"]);
       worksheet.addRow(["Wrong Answers:", wrongAnswers.length]);
       worksheet.addRow(["Total Questions:", data.totalQuestions]);
 
@@ -471,7 +471,7 @@ export default function TeacherResultDetailPage() {
         </div>
         <div className="bg-green-50 rounded-xl shadow-md border-2 border-green-200 p-6 text-center">
           <div className="text-4xl font-bold text-green-700 mb-2">
-            {data.correctAnswers}
+            {data.finalized ? data.correctAnswers : "—"}
           </div>
           <div className="text-sm text-muted-foreground">Correct Answers</div>
         </div>
