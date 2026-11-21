@@ -78,7 +78,7 @@ export async function GET(
       question: decryptString(q.encryptedQuestion),
       options: q.encryptedOptions.map((opt: string) => decryptString(opt)),
       studentAnswerIndex: studentAnswer?.chosenOption ?? null,
-      isCorrect: studentAnswer?.isCorrect ?? null,
+      isCorrect: result.gradingStarted === true ? studentAnswer?.isCorrect ?? null : null,
       explanation: q.explanation || null,
     };
   });
@@ -144,6 +144,10 @@ export async function PATCH(
         { error: "Finalized marks are locked" },
         { status: 409 },
       );
+    if (result.gradingStarted !== true) {
+      for (const answer of result.answers as any[]) answer.isCorrect = undefined;
+    }
+    result.gradingStarted = true;
     const seenMarks = new Set<number>();
     for (const mark of body.marks) {
       if (
@@ -169,6 +173,10 @@ export async function PATCH(
     await result.save();
   }
   if (body?.finalize === true) {
+    if (result.gradingStarted !== true) {
+      for (const answer of result.answers as any[]) answer.isCorrect = undefined;
+      result.gradingStarted = true;
+    }
     if (!result.testCompleted)
       return NextResponse.json(
         { error: "Submission is not complete" },
