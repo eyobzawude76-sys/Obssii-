@@ -31,6 +31,8 @@ type ResultRow = {
   correctAnswers: number;
   percentage: number;
   submittedAt: string;
+  finalized?: boolean;
+  published?: boolean;
 };
 
 export default function TeacherResultsPage() {
@@ -302,6 +304,9 @@ export default function TeacherResultsPage() {
                   Score
                 </TableHead>
                 <TableHead className="font-semibold text-violet-700">
+                  Status
+                </TableHead>
+                <TableHead className="font-semibold text-violet-700">
                   Submitted
                 </TableHead>
                 <TableHead className="font-semibold text-violet-700 text-right">
@@ -339,6 +344,9 @@ export default function TeacherResultsPage() {
                     <span className={getScoreColor(result.percentage)}>
                       {result.percentage}%
                     </span>
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {result.published ? "Published" : result.finalized ? "Ready to publish" : "Awaiting grading"}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {new Date(result.submittedAt).toLocaleDateString()}
