@@ -183,7 +183,7 @@ async function downloadPptxTemplate() {
         "• Each slide = 1 question\n" +
         "• First text box = Question\n" +
         "• Options = A), B), C), D) on separate lines\n" +
-        "• Add answer in Notes section as '' (or B, C, D)\n\n" +
+        "• Do not include an answer key; teachers mark student answers after submission\n\n" +
         "Example slides follow →",
       {
         x: 0.7,
