@@ -1,4 +1,3 @@
-import Question from "@/models/Question";
 import Result from "@/models/Result";
 
 export type ExamTiming = {
@@ -15,7 +14,6 @@ export type AnswerRecord = {
 
 export type QuestionRecord = {
   questionNumber: number;
-  correctAnswerIndex: number;
 };
 
 export type QuestionSet = { questions?: QuestionRecord[] } | null;
@@ -57,29 +55,14 @@ export async function finalizeAttemptIfExpired(
   const deadline = getAttemptDeadline(result, test);
   if (deadline === null || now < deadline) return false;
 
-  const questionDoc: QuestionSet =
-    providedQuestions ??
-    ((await Question.findOne({
-      testId: test._id,
-    }).lean()) as unknown as QuestionSet);
-  const questions = questionDoc?.questions || [];
   const answers = result.answers || [];
-  let correct = 0;
   for (const answer of answers) {
-    const question = questions.find(
-      (item) => item.questionNumber === answer.questionNumber,
-    );
-    answer.isCorrect =
-      !!question && answer.chosenOption === question.correctAnswerIndex;
-    if (answer.isCorrect) correct += 1;
+    answer.isCorrect = undefined;
   }
 
   result.answers = answers;
-  result.totalQuestions = questions.length;
-  result.correctAnswers = correct;
-  result.percentage = questions.length
-    ? Math.round((correct / questions.length) * 100)
-    : 0;
+  result.correctAnswers = 0;
+  result.percentage = 0;
   result.testCompleted = true;
   result.autoSubmitted = true;
   result.submittedAt = new Date(deadline);
