@@ -121,7 +121,7 @@ export async function POST(
       { status: 409 },
     );
   }
-  const totalQuestions = questionSet.questions?.length || 0;
+  const totalQuestions = (questionSet as any).questions?.length || 0;
   const answers = result.answers || [];
   for (const answer of answers) {
     answer.isCorrect = undefined;
