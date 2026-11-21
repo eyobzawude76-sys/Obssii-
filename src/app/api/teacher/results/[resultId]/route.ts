@@ -94,7 +94,7 @@ export async function GET(
     correctAnswers: result.correctAnswers,
     percentage: result.percentage,
     submittedAt: result.submittedAt,
-    finalized: (result as any).finalized || false,
+    finalized: result.gradingStarted === true && (result as any).finalized === true,
     published: (result as any).published || false,
     questions: reviewData,
   });
@@ -139,12 +139,15 @@ export async function PATCH(
       { status: 409 },
     );
   if (Array.isArray(body?.marks)) {
-    if (result.finalized)
+    if (result.finalized && result.gradingStarted === true)
       return NextResponse.json(
         { error: "Finalized marks are locked" },
         { status: 409 },
       );
     if (result.gradingStarted !== true) {
+      result.finalized = false;
+      result.correctAnswers = 0;
+      result.percentage = 0;
       for (const answer of result.answers as any[]) answer.isCorrect = undefined;
     }
     result.gradingStarted = true;
@@ -173,8 +176,16 @@ export async function PATCH(
     await result.save();
   }
   if (body?.finalize === true) {
+    if (result.finalized && result.gradingStarted === true)
+      return NextResponse.json(
+        { error: "Finalized marks are locked" },
+        { status: 409 },
+      );
     if (result.gradingStarted !== true) {
       for (const answer of result.answers as any[]) answer.isCorrect = undefined;
+      result.finalized = false;
+      result.correctAnswers = 0;
+      result.percentage = 0;
       result.gradingStarted = true;
     }
     if (!result.testCompleted)
@@ -202,7 +213,7 @@ export async function PATCH(
     await result.save();
   }
   if (body?.publish === true) {
-    if (!result.finalized)
+    if (!result.finalized || result.gradingStarted !== true)
       return NextResponse.json(
         { error: "Finalize marks before publishing" },
         { status: 409 },
