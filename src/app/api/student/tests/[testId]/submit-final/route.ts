@@ -140,6 +140,7 @@ export async function POST(
         percentage: 0,
         testCompleted: true,
         finalized: false,
+        gradingStarted: false,
         published: false,
         autoSubmitted: false,
         submittedAt: new Date(),
