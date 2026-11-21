@@ -157,8 +157,8 @@ export default function TeacherResultsPage() {
           testName: result.test.title,
           subject: result.test.subject,
           totalQuestions: result.totalQuestions,
-          correctAnswers: result.correctAnswers,
-          percentage: result.percentage,
+          correctAnswers: result.finalized ? result.correctAnswers : "Pending",
+          percentage: result.finalized ? result.percentage : "Pending",
           submittedDate: submittedDate.toLocaleDateString(),
           submittedTime: submittedDate.toLocaleTimeString(),
         });
@@ -338,12 +338,16 @@ export default function TeacherResultsPage() {
                     {result.totalQuestions}
                   </TableCell>
                   <TableCell className="text-center">
-                    {result.correctAnswers}
+                    {result.finalized ? result.correctAnswers : "—"}
                   </TableCell>
                   <TableCell className="text-center">
-                    <span className={getScoreColor(result.percentage)}>
-                      {result.percentage}%
-                    </span>
+                    {result.finalized ? (
+                      <span className={getScoreColor(result.percentage)}>
+                        {result.percentage}%
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">Pending</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-sm">
                     {result.published ? "Published" : result.finalized ? "Ready to publish" : "Awaiting grading"}
