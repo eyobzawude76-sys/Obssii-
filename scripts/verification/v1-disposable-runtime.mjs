@@ -512,6 +512,19 @@ async function main() {
   ) {
     throw new Error("Published legacy results were hidden in teacher views");
   }
+  const legacyStudentResult = await (
+    await call("student", "GET", `/api/student/results/${submitted.resultId}`)
+  ).json();
+  const legacyStudentReview = await (
+    await call("student", "GET", `/api/student/review/${submitted.resultId}`)
+  ).json();
+  if (
+    legacyStudentResult.result?.published !== true ||
+    legacyStudentResult.result?.finalized !== true ||
+    legacyStudentReview.questions?.[0]?.isCorrect !== true
+  ) {
+    throw new Error("Published legacy result was not available to its student");
+  }
   await call("student", "GET", questionRoute, undefined, 409);
   const expiryTest = await (
     await call(
