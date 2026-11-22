@@ -216,9 +216,15 @@ export async function GET() {
       (sum, test) => sum + (test.assignedStudents?.length || 0),
       0,
     );
+    const completedAssignmentCount = new Set(
+      allResults.map(
+        (result: any) =>
+          `${String(result.test?._id || result.test)}:${String(result.student?._id || result.student)}`,
+      ),
+    ).size;
     const completionRate =
       totalAssignments > 0
-        ? Math.round((allResults.length / totalAssignments) * 100)
+        ? Math.round((completedAssignmentCount / totalAssignments) * 100)
         : 0;
 
     // Active users (users created in last 30 days)
