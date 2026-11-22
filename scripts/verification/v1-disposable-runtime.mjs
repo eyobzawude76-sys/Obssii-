@@ -501,6 +501,7 @@ async function main() {
     legacyTeacherDetail.finalized !== true ||
     legacyTeacherDetail.published !== true ||
     legacyTeacherDetail.percentage !== 100 ||
+    legacyTeacherDetail.questions?.[0]?.isCorrect !== true ||
     !legacyTeacherList.results?.some(
       (item) =>
         String(item._id) === submitted.resultId &&
