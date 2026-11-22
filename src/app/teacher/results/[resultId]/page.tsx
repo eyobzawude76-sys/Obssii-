@@ -466,7 +466,7 @@ export default function TeacherResultDetailPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl shadow-md border-2 border-violet-200 p-6 text-center">
           <div className="text-4xl font-bold text-violet-700 mb-2">
-            {data.percentage}%
+            {data.finalized ? `${data.percentage}%` : "—"}
           </div>
           <div className="text-sm text-muted-foreground">Overall Score</div>
         </div>
