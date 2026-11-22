@@ -12,12 +12,6 @@ export type AnswerRecord = {
   isCorrect?: boolean;
 };
 
-export type QuestionRecord = {
-  questionNumber: number;
-};
-
-export type QuestionSet = { questions?: QuestionRecord[] } | null;
-
 export type AttemptRecord = {
   testCompleted?: boolean;
   startedAt?: Date | string | null;
@@ -52,7 +46,6 @@ export async function finalizeAttemptIfExpired(
   result: AttemptRecord | null,
   test: ExamTiming,
   now = Date.now(),
-  providedQuestions?: QuestionSet,
 ) {
   if (!result || result.testCompleted) return false;
   const deadline = getAttemptDeadline(result, test);
