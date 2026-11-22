@@ -452,7 +452,7 @@ async function main() {
     new File(
       [
         "question,optionA,optionB,optionC,optionD\n" +
-          "One plus one?,One,Two,Three,Four,B\n",
+          "One plus one?,One,Two,Three,Four\n",
       ],
       "expiry-questions.csv",
       { type: "text/csv" },
