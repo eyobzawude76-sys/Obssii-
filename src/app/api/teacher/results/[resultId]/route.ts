@@ -94,7 +94,9 @@ export async function GET(
     correctAnswers: result.correctAnswers,
     percentage: result.percentage,
     submittedAt: result.submittedAt,
-    finalized: result.gradingStarted === true && (result as any).finalized === true,
+    finalized:
+      (result as any).finalized === true &&
+      (result.gradingStarted === true || result.published === true),
     published: (result as any).published || false,
     questions: reviewData,
   });
