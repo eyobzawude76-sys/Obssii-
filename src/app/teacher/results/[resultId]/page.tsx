@@ -304,7 +304,8 @@ export default function TeacherResultDetailPage() {
     }
   };
 
-  const wrongAnswers = data?.questions.filter((q) => q.isCorrect === false || q.studentAnswerIndex === null) || [];
+  const wrongAnswers = data?.questions.filter((q) => q.isCorrect === false) || [];
+  const wrongOrUnanswered = data?.questions.filter((q) => q.isCorrect === false || q.studentAnswerIndex === null) || [];
   const pendingMarks = data?.questions.filter((q) => q.studentAnswerIndex !== null && q.isCorrect === null).length || 0;
   if (loading) {
     return (
@@ -499,9 +500,9 @@ export default function TeacherResultDetailPage() {
             </h3>
           </div>
           <p className="text-sm text-red-800">
-            {wrongAnswers.length} question(s) are wrong or unanswered:{" "}
+            {wrongOrUnanswered.length} question(s) are wrong or unanswered:{" "}
             <span className="font-semibold">
-              {wrongAnswers.map((q) => `Q${q.questionNumber}`).join(", ")}
+              {wrongOrUnanswered.map((q) => `Q${q.questionNumber}`).join(", ")}
             </span>
           </p>
         </div>
