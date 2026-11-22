@@ -78,7 +78,10 @@ export async function GET(
       question: decryptString(q.encryptedQuestion),
       options: q.encryptedOptions.map((opt: string) => decryptString(opt)),
       studentAnswerIndex: studentAnswer?.chosenOption ?? null,
-      isCorrect: result.gradingStarted === true ? studentAnswer?.isCorrect ?? null : null,
+      isCorrect:
+        result.gradingStarted === true || result.published === true
+          ? studentAnswer?.isCorrect ?? null
+          : null,
       explanation: q.explanation || null,
     };
   });
