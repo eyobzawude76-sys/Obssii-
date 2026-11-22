@@ -274,7 +274,7 @@ async function main() {
     "file",
     new File(
       [
-        "question,optionA,optionB,optionC,optionD,correctAnswer\n" +
+        "question,optionA,optionB,optionC,optionD\n" +
           "Two plus two?,Three,Four,Five,Six,B\n",
       ],
       "questions.csv",
@@ -429,7 +429,7 @@ async function main() {
     "file",
     new File(
       [
-        "question,optionA,optionB,optionC,optionD,correctAnswer\n" +
+        "question,optionA,optionB,optionC,optionD\n" +
           "One plus one?,One,Two,Three,Four,B\n",
       ],
       "expiry-questions.csv",
