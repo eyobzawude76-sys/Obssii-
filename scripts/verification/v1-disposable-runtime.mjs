@@ -241,6 +241,7 @@ async function main() {
     teacherCreated.credentials.username,
     teacherCreated.credentials.temporaryPassword,
   );
+  await call("teacher", "POST", "/api/teacher/chat", { message: "V1 scope check" }, 404);
   const teacherAssignments = await (
     await call("teacher", "GET", "/api/teacher/assignments")
   ).json();
@@ -307,6 +308,7 @@ async function main() {
     studentCreated.credentials.username,
     studentCreated.credentials.temporaryPassword,
   );
+  await call("student", "POST", "/api/student/chat", { message: "V1 scope check" }, 404);
   const available = await (
     await call("student", "GET", "/api/student/assignments/today")
   ).json();
