@@ -32,7 +32,7 @@ export async function GET(
     .populate("test", "title subject teacher assignment")
     .lean();
 
-  if (!result) {
+  if (!result || result.testCompleted !== true) {
     return NextResponse.json({ error: "Result not found" }, { status: 404 });
   }
 
