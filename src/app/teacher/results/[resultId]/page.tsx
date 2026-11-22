@@ -178,7 +178,7 @@ export default function TeacherResultDetailPage() {
       const scoreSummaryRow = worksheet.addRow(["Score Summary"]);
       scoreSummaryRow.font = { bold: true, size: 14 };
 
-      worksheet.addRow(["Overall Score:", data.finalized ? `${data.percentage}%` : "Pending"]);
+      worksheet.addRow(["Overall Score:", data.finalized ? `${data.finalized ? `${data.percentage}%` : "—"}` : "Pending"]);
       worksheet.addRow(["Correct Answers:", data.finalized ? data.correctAnswers : "Pending"]);
       worksheet.addRow(["Wrong Answers:", wrongAnswers.length]);
       worksheet.addRow(["Total Questions:", data.totalQuestions]);
