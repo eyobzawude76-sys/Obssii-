@@ -478,6 +478,39 @@ async function main() {
   ) {
     throw new Error("Published result missing from student completed list");
   }
+  await mongoose.connect(testUri, { serverSelectionTimeoutMS: 5000 });
+  mongoConnected = true;
+  const legacyUpdate = await mongoose.connection.db
+    .collection("results")
+    .updateOne(
+      { _id: new mongoose.Types.ObjectId(submitted.resultId) },
+      { $set: { gradingStarted: false } },
+    );
+  if (legacyUpdate.modifiedCount !== 1) {
+    throw new Error("Could not create published legacy result verification fixture");
+  }
+  await mongoose.disconnect();
+  mongoConnected = false;
+  const legacyTeacherDetail = await (
+    await call("teacher", "GET", `/api/teacher/results/${submitted.resultId}`)
+  ).json();
+  const legacyTeacherList = await (
+    await call("teacher", "GET", "/api/teacher/results")
+  ).json();
+  if (
+    legacyTeacherDetail.finalized !== true ||
+    legacyTeacherDetail.published !== true ||
+    legacyTeacherDetail.percentage !== 100 ||
+    !legacyTeacherList.results?.some(
+      (item) =>
+        String(item._id) === submitted.resultId &&
+        item.finalized === true &&
+        item.published === true &&
+        item.percentage === 100,
+    )
+  ) {
+    throw new Error("Published legacy results were hidden in teacher views");
+  }
   await call("student", "GET", questionRoute, undefined, 409);
   const expiryTest = await (
     await call(
