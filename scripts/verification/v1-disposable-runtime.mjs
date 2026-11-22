@@ -330,6 +330,13 @@ async function main() {
   }
   await call(
     "teacher",
+    "GET",
+    `/api/teacher/results/${question.attemptId}`,
+    undefined,
+    404,
+  );
+  await call(
+    "teacher",
     "PATCH",
     `/api/teacher/results/${question.attemptId}`,
     { marks: [{ questionNumber: 1, isCorrect: true }] },
