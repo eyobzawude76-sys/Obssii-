@@ -185,7 +185,7 @@ export default function ReviewTestPage() {
                           : "bg-gray-100 text-gray-700"
                     }`}
                   >
-                    {q.isCorrect === true ? "Correct" : q.isCorrect === false ? "Incorrect" : "Not Answered"}
+                    {q.studentAnswerIndex === null ? "Not Answered" : q.isCorrect === true ? "Correct" : q.isCorrect === false ? "Incorrect" : "Not Marked"}
                   </span>
                 </div>
                 <p className="text-lg font-medium text-gray-900">
@@ -204,9 +204,11 @@ export default function ReviewTestPage() {
                     key={`${getOptionLabel(idx)}-${option}`}
                     className={`p-4 rounded-lg border-2 ${
                       isStudentAnswer
-                        ? q.isCorrect
+                        ? q.isCorrect === true
                           ? "bg-green-50 border-green-400"
-                          : "bg-red-50 border-red-400"
+                          : q.isCorrect === false
+                            ? "bg-red-50 border-red-400"
+                            : "bg-gray-100 border-gray-300"
                         : "bg-gray-50 border-gray-200"
                     }`}
                   >
@@ -216,8 +218,8 @@ export default function ReviewTestPage() {
                       </span>
                       <span className="flex-1 text-gray-800">{option}</span>
                       {isStudentAnswer && (
-                        <span className={`text-xs font-semibold px-2 py-1 rounded ${q.isCorrect ? "text-green-700 bg-green-200" : "text-red-700 bg-red-200"}`}>
-                          Your Answer {q.isCorrect ? "✓" : "✗"}
+                        <span className={`text-xs font-semibold px-2 py-1 rounded ${q.isCorrect === true ? "text-green-700 bg-green-200" : q.isCorrect === false ? "text-red-700 bg-red-200" : "text-gray-700 bg-gray-200"}`}>
+                          Your Answer {q.isCorrect === true ? "✓" : q.isCorrect === false ? "✗" : "·"}
                         </span>
                       )}
                     </div>
