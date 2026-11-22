@@ -15,7 +15,7 @@ type QuestionReview = {
   question: string;
   options: string[];
   studentAnswerIndex: number | null;
-  isCorrect: boolean;
+  isCorrect: boolean | null;
   explanation: string | null;
 };
 
@@ -155,17 +155,21 @@ export default function ReviewTestPage() {
           <div
             key={q.questionNumber}
             className={`bg-white rounded-2xl shadow-md border-2 p-6 ${
-              q.isCorrect
+              q.isCorrect === true
                 ? "border-green-300 bg-green-50/30"
-                : "border-red-300 bg-red-50/30"
+                : q.isCorrect === false
+                  ? "border-red-300 bg-red-50/30"
+                  : "border-gray-300 bg-gray-50"
             }`}
           >
             {/* Question Header */}
             <div className="flex items-start gap-3 mb-4">
-              {q.isCorrect ? (
+              {q.isCorrect === true ? (
                 <CheckCircle2 className="w-6 h-6 text-green-600 mt-1 shrink-0" />
-              ) : (
+              ) : q.isCorrect === false ? (
                 <XCircle className="w-6 h-6 text-red-600 mt-1 shrink-0" />
+              ) : (
+                <AlertCircle className="w-6 h-6 text-gray-500 mt-1 shrink-0" />
               )}
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
@@ -174,12 +178,14 @@ export default function ReviewTestPage() {
                   </span>
                   <span
                     className={`text-xs px-2 py-1 rounded-full font-semibold ${
-                      q.isCorrect
+                      q.isCorrect === true
                         ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
+                        : q.isCorrect === false
+                          ? "bg-red-100 text-red-700"
+                          : "bg-gray-100 text-gray-700"
                     }`}
                   >
-                    {q.isCorrect ? "Correct" : "Incorrect"}
+                    {q.isCorrect === true ? "Correct" : q.isCorrect === false ? "Incorrect" : "Not Answered"}
                   </span>
                 </div>
                 <p className="text-lg font-medium text-gray-900">
