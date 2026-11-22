@@ -45,7 +45,12 @@ export async function GET(req: Request) {
     .sort({ submittedAt: -1 })
     .lean();
 
-  const normalizedResults = results.map((result: any) => ({ ...result, finalized: result.gradingStarted === true && result.finalized === true }));
+  const normalizedResults = results.map((result: any) => ({
+    ...result,
+    finalized:
+      result.finalized === true &&
+      (result.gradingStarted === true || result.published === true),
+  }));
 
   return NextResponse.json({ results: normalizedResults });
 }
