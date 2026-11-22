@@ -400,6 +400,14 @@ async function main() {
   ) {
     throw new Error("Teacher review response exposed a question answer key");
   }
+  if (
+    teacherResult.finalized !== false ||
+    teacherResult.questions?.[0]?.isCorrect !== null ||
+    teacherResult.correctAnswers !== 0 ||
+    teacherResult.percentage !== 0
+  ) {
+    throw new Error("Student submission was automatically graded before teacher review");
+  }
   await call("teacher", "PATCH", `/api/teacher/results/${submitted.resultId}`, {
     marks: [{ questionNumber: 1, isCorrect: true }],
     finalize: true,
@@ -410,6 +418,22 @@ async function main() {
     `/api/student/results/${submitted.resultId}`,
     undefined,
     404,
+  );
+  const finalizedTeacherResult = await (
+    await call("teacher", "GET", `/api/teacher/results/${submitted.resultId}`)
+  ).json();
+  if (
+    finalizedTeacherResult.finalized !== true ||
+    finalizedTeacherResult.questions?.[0]?.isCorrect !== true
+  ) {
+    throw new Error("Teacher marks were not saved and finalized correctly");
+  }
+  await call(
+    "teacher",
+    "PATCH",
+    `/api/teacher/results/${submitted.resultId}`,
+    { marks: [{ questionNumber: 1, isCorrect: false }] },
+    409,
   );
   const finalizedTeacherDashboard = await (
     await call("teacher", "GET", "/api/teacher/dashboard")
