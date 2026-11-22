@@ -377,6 +377,19 @@ async function main() {
     undefined,
     404,
   );
+  const pendingTeacherDashboard = await (
+    await call("teacher", "GET", "/api/teacher/dashboard")
+  ).json();
+  const pendingAdminDashboard = await (
+    await call("superadmin", "GET", "/api/admin/dashboard")
+  ).json();
+  if (
+    pendingTeacherDashboard.summary?.totalResults !== 0 ||
+    pendingTeacherDashboard.summary?.avgPercentage !== 0 ||
+    pendingAdminDashboard.summary?.avgPerformance !== 0
+  ) {
+    throw new Error("Ungraded submissions were included in dashboard performance metrics");
+  }
   const teacherResult = await (
     await call("teacher", "GET", `/api/teacher/results/${submitted.resultId}`)
   ).json();
@@ -398,6 +411,19 @@ async function main() {
     undefined,
     404,
   );
+  const finalizedTeacherDashboard = await (
+    await call("teacher", "GET", "/api/teacher/dashboard")
+  ).json();
+  const finalizedAdminDashboard = await (
+    await call("superadmin", "GET", "/api/admin/dashboard")
+  ).json();
+  if (
+    finalizedTeacherDashboard.summary?.totalResults !== 1 ||
+    finalizedTeacherDashboard.summary?.avgPercentage !== 100 ||
+    finalizedAdminDashboard.summary?.avgPerformance !== 100
+  ) {
+    throw new Error("Finalized manual marks were not reflected in dashboard performance metrics");
+  }
   await call("teacher", "PATCH", `/api/teacher/results/${submitted.resultId}`, {
     publish: true,
   });
