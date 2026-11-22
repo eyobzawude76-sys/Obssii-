@@ -41,12 +41,12 @@ export async function GET() {
       }
     });
 
-    // Calculate average result percentage
-    const completedResults = results.filter(
+    // Submitted attempts drive completion; only finalized grades drive performance.
+    const submittedResults = results.filter((r) => r.testCompleted);
+    const completedResults = submittedResults.filter(
       (r) =>
-        r.testCompleted &&
-        (r.published === true ||
-          (r.gradingStarted === true && r.finalized === true)),
+        r.published === true ||
+        (r.gradingStarted === true && r.finalized === true),
     );
     const avgPercentage =
       completedResults.length > 0
@@ -144,7 +144,7 @@ export async function GET() {
     );
     const completionRate =
       totalAssignments > 0
-        ? Math.round((completedResults.length / totalAssignments) * 100)
+        ? Math.round((submittedResults.length / totalAssignments) * 100)
         : 0;
 
     // Top performing students (top 5)
