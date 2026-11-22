@@ -275,7 +275,7 @@ async function main() {
     new File(
       [
         "question,optionA,optionB,optionC,optionD\n" +
-          "Two plus two?,Three,Four,Five,Six,B\n",
+          "Two plus two?,Three,Four,Five,Six\n",
       ],
       "questions.csv",
       { type: "text/csv" },
