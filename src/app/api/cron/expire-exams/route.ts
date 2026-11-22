@@ -96,13 +96,8 @@ export async function GET(request: Request) {
   for (const attempt of attempts as unknown as ExpirableAttempt[]) {
     const test = attempt.test;
     if (!test) continue;
-    const testId = String(test._id);
     if (
-      await finalizeAttemptIfExpired(
-        attempt,
-        test,
-        now,
-      )
+      await finalizeAttemptIfExpired(attempt, test, now)
     ) {
       finalized += 1;
     }
