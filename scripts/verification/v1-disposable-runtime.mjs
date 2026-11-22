@@ -330,6 +330,13 @@ async function main() {
   }
   await call(
     "teacher",
+    "PATCH",
+    `/api/teacher/results/${question.attemptId}`,
+    { marks: [{ questionNumber: 1, isCorrect: true }] },
+    409,
+  );
+  await call(
+    "teacher",
     "POST",
     `/api/student/tests/${test.id}/submit-question`,
     {
