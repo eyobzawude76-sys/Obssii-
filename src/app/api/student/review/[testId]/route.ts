@@ -74,7 +74,7 @@ export async function GET(
       question: decryptString(question.encryptedQuestion),
       options: question.encryptedOptions.map((option) => decryptString(option)),
       studentAnswerIndex: studentAnswer?.chosenOption ?? null,
-      isCorrect: studentAnswer?.isCorrect ?? false,
+      isCorrect: studentAnswer?.chosenOption == null ? null : studentAnswer.isCorrect ?? null,
       explanation: question.explanation || null,
     };
   });
