@@ -43,6 +43,12 @@ export async function GET() {
 
     // Submitted attempts drive completion; only finalized grades drive performance.
     const submittedResults = results.filter((r) => r.testCompleted);
+    const completedAssignmentCount = new Set(
+      submittedResults.map(
+        (result: any) =>
+          `${String(result.test?._id || result.test)}:${String(result.student?._id || result.student)}`,
+      ),
+    ).size;
     const completedResults = submittedResults.filter(
       (r) =>
         r.published === true ||
@@ -144,7 +150,7 @@ export async function GET() {
     );
     const completionRate =
       totalAssignments > 0
-        ? Math.round((submittedResults.length / totalAssignments) * 100)
+        ? Math.round((completedAssignmentCount / totalAssignments) * 100)
         : 0;
 
     // Top performing students (top 5)
