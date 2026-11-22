@@ -388,6 +388,7 @@ async function main() {
   if (
     pendingTeacherDashboard.summary?.totalResults !== 0 ||
     pendingTeacherDashboard.summary?.avgPercentage !== 0 ||
+    pendingTeacherDashboard.summary?.completionRate !== 100 ||
     pendingAdminDashboard.summary?.avgPerformance !== 0
   ) {
     throw new Error("Ungraded submissions were included in dashboard performance metrics");
