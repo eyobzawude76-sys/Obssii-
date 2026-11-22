@@ -6,7 +6,6 @@ import {
   FileTextIcon,
   HomeIcon,
   LogOutIcon,
-  MessageSquare,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -21,7 +20,6 @@ const navLinks = [
   { name: "Questions", href: "/teacher/questions", icon: FilePlusIcon },
   { name: "Terms", href: "/teacher/terms", icon: FileTextIcon },
   { name: "Results", href: "/teacher/results", icon: BarChart2Icon },
-  { name: "AI Assistant", href: "/teacher/chat", icon: MessageSquare },
 ];
 
 export default function TeacherLayout({ children }: { children: ReactNode }) {

@@ -6,9 +6,7 @@ import {
   type AttemptRecord,
   type ExamTiming,
   finalizeAttemptIfExpired,
-  type QuestionSet,
 } from "@/lib/teacher-exams";
-import Question from "@/models/Question";
 import Result from "@/models/Result";
 import Test from "@/models/Test";
 
@@ -94,27 +92,12 @@ export async function GET(request: Request) {
   }).populate("test", "durationMinutes endTime");
 
   type ExpirableAttempt = AttemptRecord & { test?: ExamTiming | null };
-  const questionDocs = new Map<string, QuestionSet>();
   let finalized = 0;
   for (const attempt of attempts as unknown as ExpirableAttempt[]) {
     const test = attempt.test;
     if (!test) continue;
-    const testId = String(test._id);
-    if (!questionDocs.has(testId)) {
-      questionDocs.set(
-        testId,
-        (await Question.findOne({
-          testId: test._id,
-        }).lean()) as unknown as QuestionSet,
-      );
-    }
     if (
-      await finalizeAttemptIfExpired(
-        attempt,
-        test,
-        now,
-        questionDocs.get(testId),
-      )
+      await finalizeAttemptIfExpired(attempt, test, now)
     ) {
       finalized += 1;
     }

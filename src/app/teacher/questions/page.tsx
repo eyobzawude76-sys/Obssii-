@@ -49,7 +49,7 @@ async function downloadWordTemplate() {
               spacing: { after: 50 },
             }),
             new Paragraph({
-              text: "• Add 'Answer: X' after options (where X is A, B, C, or D)",
+              text: "• Do not add an answer key; teachers will mark student answers after submission",
               bullet: { level: 0 },
               spacing: { after: 50 },
             }),
@@ -85,17 +85,6 @@ async function downloadWordTemplate() {
               text: "D) 4",
               spacing: { after: 50 },
             }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "Answer: D",
-                  bold: true,
-                  color: "0066CC",
-                }),
-              ],
-              spacing: { after: 300 },
-            }),
-
             // Example 2
             new Paragraph({
               children: [
@@ -122,17 +111,6 @@ async function downloadWordTemplate() {
               text: "D) Rome",
               spacing: { after: 50 },
             }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "Answer: C",
-                  bold: true,
-                  color: "0066CC",
-                }),
-              ],
-              spacing: { after: 300 },
-            }),
-
             // Example 3
             new Paragraph({
               children: [
@@ -159,17 +137,6 @@ async function downloadWordTemplate() {
               text: "D) Yellow",
               spacing: { after: 50 },
             }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "Answer: C",
-                  bold: true,
-                  color: "0066CC",
-                }),
-              ],
-              spacing: { after: 300 },
-            }),
-
             // Footer note
             new Paragraph({
               children: [
@@ -216,7 +183,7 @@ async function downloadPptxTemplate() {
         "• Each slide = 1 question\n" +
         "• First text box = Question\n" +
         "• Options = A), B), C), D) on separate lines\n" +
-        "• Add answer in Notes section as 'Answer: A' (or B, C, D)\n\n" +
+        "• Do not include an answer key; teachers mark student answers after submission\n\n" +
         "Example slides follow →",
       {
         x: 0.7,
@@ -228,7 +195,7 @@ async function downloadPptxTemplate() {
       },
     );
 
-    const makeSlide = (question: string, options: string[], answer: string) => {
+    const makeSlide = (question: string, options: string[]) => {
       const slide = pptx.addSlide();
       slide.addText(question, {
         x: 0.5,
@@ -253,15 +220,13 @@ async function downloadPptxTemplate() {
           color: "000000",
         },
       );
-      slide.addNotes(`Answer: ${answer}`);
     };
 
-    makeSlide("What is 2 + 2?", ["1", "2", "3", "4"], "D");
-    makeSlide("Capital of France?", ["Berlin", "Madrid", "Paris", "Rome"], "C");
+    makeSlide("What is 2 + 2?", ["1", "2", "3", "4"]);
+    makeSlide("Capital of France?", ["Berlin", "Madrid", "Paris", "Rome"]);
     makeSlide(
       "What color is the sky?",
       ["Red", "Green", "Blue", "Yellow"],
-      "C",
     );
 
     await pptx.writeFile({ fileName: "questions_template.pptx" });
@@ -403,8 +368,7 @@ export default function TeacherQuestionsPage() {
           <span className="underline ml-1">browse</span>
         </div>
         <div className="text-xs text-blue-700/80">
-          CSV columns: question, optionA, optionB, optionC, optionD,
-          correctAnswer (A-D or 1-4)
+          CSV columns: question, optionA, optionB, optionC, optionD (no answer key)
         </div>
         <input
           type="file"

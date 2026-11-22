@@ -1,4 +1,3 @@
-import Question from "@/models/Question";
 import Result from "@/models/Result";
 
 export type ExamTiming = {
@@ -13,13 +12,6 @@ export type AnswerRecord = {
   isCorrect?: boolean;
 };
 
-export type QuestionRecord = {
-  questionNumber: number;
-  correctAnswerIndex: number;
-};
-
-export type QuestionSet = { questions?: QuestionRecord[] } | null;
-
 export type AttemptRecord = {
   testCompleted?: boolean;
   startedAt?: Date | string | null;
@@ -28,6 +20,9 @@ export type AttemptRecord = {
   correctAnswers?: number;
   percentage?: number;
   autoSubmitted?: boolean;
+  finalized?: boolean;
+  gradingStarted?: boolean;
+  published?: boolean;
   submittedAt?: Date;
   save: () => Promise<unknown>;
 };
@@ -51,35 +46,22 @@ export async function finalizeAttemptIfExpired(
   result: AttemptRecord | null,
   test: ExamTiming,
   now = Date.now(),
-  providedQuestions?: QuestionSet,
 ) {
   if (!result || result.testCompleted) return false;
   const deadline = getAttemptDeadline(result, test);
   if (deadline === null || now < deadline) return false;
 
-  const questionDoc: QuestionSet =
-    providedQuestions ??
-    ((await Question.findOne({
-      testId: test._id,
-    }).lean()) as unknown as QuestionSet);
-  const questions = questionDoc?.questions || [];
   const answers = result.answers || [];
-  let correct = 0;
   for (const answer of answers) {
-    const question = questions.find(
-      (item) => item.questionNumber === answer.questionNumber,
-    );
-    answer.isCorrect =
-      !!question && answer.chosenOption === question.correctAnswerIndex;
-    if (answer.isCorrect) correct += 1;
+    answer.isCorrect = undefined;
   }
 
   result.answers = answers;
-  result.totalQuestions = questions.length;
-  result.correctAnswers = correct;
-  result.percentage = questions.length
-    ? Math.round((correct / questions.length) * 100)
-    : 0;
+  result.correctAnswers = 0;
+  result.percentage = 0;
+  result.finalized = false;
+  result.gradingStarted = false;
+  result.published = false;
   result.testCompleted = true;
   result.autoSubmitted = true;
   result.submittedAt = new Date(deadline);

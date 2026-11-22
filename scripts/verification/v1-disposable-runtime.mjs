@@ -241,6 +241,7 @@ async function main() {
     teacherCreated.credentials.username,
     teacherCreated.credentials.temporaryPassword,
   );
+  await call("teacher", "POST", "/api/teacher/chat", { message: "V1 scope check" }, 404);
   const teacherAssignments = await (
     await call("teacher", "GET", "/api/teacher/assignments")
   ).json();
@@ -274,8 +275,8 @@ async function main() {
     "file",
     new File(
       [
-        "question,optionA,optionB,optionC,optionD,correctAnswer\n" +
-          "Two plus two?,Three,Four,Five,Six,B\n",
+        "question,optionA,optionB,optionC,optionD\n" +
+          "Two plus two?,Three,Four,Five,Six\n",
       ],
       "questions.csv",
       { type: "text/csv" },
@@ -307,6 +308,7 @@ async function main() {
     studentCreated.credentials.username,
     studentCreated.credentials.temporaryPassword,
   );
+  await call("student", "POST", "/api/student/chat", { message: "V1 scope check" }, 404);
   const available = await (
     await call("student", "GET", "/api/student/assignments/today")
   ).json();
@@ -318,12 +320,28 @@ async function main() {
   const repeated = await (await call("student", "GET", questionRoute)).json();
   if (
     question.attemptId !== repeated.attemptId ||
-    question.question !== "Two plus two?"
+    question.question !== "Two plus two?" ||
+    "correctAnswerIndex" in question ||
+    "correctAnswer" in question
   ) {
     throw new Error(
       "Student question or concurrent-safe active attempt check failed",
     );
   }
+  await call(
+    "teacher",
+    "GET",
+    `/api/teacher/results/${question.attemptId}`,
+    undefined,
+    404,
+  );
+  await call(
+    "teacher",
+    "PATCH",
+    `/api/teacher/results/${question.attemptId}`,
+    { marks: [{ questionNumber: 1, isCorrect: true }] },
+    409,
+  );
   await call(
     "teacher",
     "POST",
@@ -375,7 +393,38 @@ async function main() {
     undefined,
     404,
   );
-  await call("teacher", "GET", `/api/teacher/results/${submitted.resultId}`);
+  const pendingTeacherDashboard = await (
+    await call("teacher", "GET", "/api/teacher/dashboard")
+  ).json();
+  const pendingAdminDashboard = await (
+    await call("superadmin", "GET", "/api/admin/dashboard")
+  ).json();
+  if (
+    pendingTeacherDashboard.summary?.totalResults !== 0 ||
+    pendingTeacherDashboard.summary?.avgPercentage !== 0 ||
+    pendingTeacherDashboard.summary?.completionRate !== 100 ||
+    pendingAdminDashboard.summary?.avgPerformance !== 0
+  ) {
+    throw new Error("Ungraded submissions were included in dashboard performance metrics");
+  }
+  const teacherResult = await (
+    await call("teacher", "GET", `/api/teacher/results/${submitted.resultId}`)
+  ).json();
+  if (
+    teacherResult.questions?.some(
+      (item) => "correctAnswerIndex" in item || "correctAnswer" in item,
+    )
+  ) {
+    throw new Error("Teacher review response exposed a question answer key");
+  }
+  if (
+    teacherResult.finalized !== false ||
+    teacherResult.questions?.[0]?.isCorrect !== null ||
+    teacherResult.correctAnswers !== 0 ||
+    teacherResult.percentage !== 0
+  ) {
+    throw new Error("Student submission was automatically graded before teacher review");
+  }
   await call("teacher", "PATCH", `/api/teacher/results/${submitted.resultId}`, {
     marks: [{ questionNumber: 1, isCorrect: true }],
     finalize: true,
@@ -387,6 +436,35 @@ async function main() {
     undefined,
     404,
   );
+  const finalizedTeacherResult = await (
+    await call("teacher", "GET", `/api/teacher/results/${submitted.resultId}`)
+  ).json();
+  if (
+    finalizedTeacherResult.finalized !== true ||
+    finalizedTeacherResult.questions?.[0]?.isCorrect !== true
+  ) {
+    throw new Error("Teacher marks were not saved and finalized correctly");
+  }
+  await call(
+    "teacher",
+    "PATCH",
+    `/api/teacher/results/${submitted.resultId}`,
+    { marks: [{ questionNumber: 1, isCorrect: false }] },
+    409,
+  );
+  const finalizedTeacherDashboard = await (
+    await call("teacher", "GET", "/api/teacher/dashboard")
+  ).json();
+  const finalizedAdminDashboard = await (
+    await call("superadmin", "GET", "/api/admin/dashboard")
+  ).json();
+  if (
+    finalizedTeacherDashboard.summary?.totalResults !== 1 ||
+    finalizedTeacherDashboard.summary?.avgPercentage !== 100 ||
+    finalizedAdminDashboard.summary?.avgPerformance !== 100
+  ) {
+    throw new Error("Finalized manual marks were not reflected in dashboard performance metrics");
+  }
   await call("teacher", "PATCH", `/api/teacher/results/${submitted.resultId}`, {
     publish: true,
   });
@@ -398,6 +476,17 @@ async function main() {
       "Published student result detail did not return finalized published result",
     );
   }
+  const studentReview = await (
+    await call("student", "GET", `/api/student/review/${submitted.resultId}`)
+  ).json();
+  if (
+    studentReview.questions?.[0]?.isCorrect !== true ||
+    studentReview.questions?.some(
+      (item) => "correctAnswerIndex" in item || "correctAnswer" in item,
+    )
+  ) {
+    throw new Error("Student review did not return teacher mark without answer key");
+  }
   const completed = await (
     await call("student", "GET", "/api/student/results/completed")
   ).json();
@@ -405,6 +494,53 @@ async function main() {
     !completed.results?.some((item) => String(item._id) === submitted.resultId)
   ) {
     throw new Error("Published result missing from student completed list");
+  }
+  await mongoose.connect(testUri, { serverSelectionTimeoutMS: 5000 });
+  mongoConnected = true;
+  const legacyUpdate = await mongoose.connection.db
+    .collection("results")
+    .updateOne(
+      { _id: new mongoose.Types.ObjectId(submitted.resultId) },
+      { $set: { gradingStarted: false } },
+    );
+  if (legacyUpdate.modifiedCount !== 1) {
+    throw new Error("Could not create published legacy result verification fixture");
+  }
+  await mongoose.disconnect();
+  mongoConnected = false;
+  const legacyTeacherDetail = await (
+    await call("teacher", "GET", `/api/teacher/results/${submitted.resultId}`)
+  ).json();
+  const legacyTeacherList = await (
+    await call("teacher", "GET", "/api/teacher/results")
+  ).json();
+  if (
+    legacyTeacherDetail.finalized !== true ||
+    legacyTeacherDetail.published !== true ||
+    legacyTeacherDetail.percentage !== 100 ||
+    legacyTeacherDetail.questions?.[0]?.isCorrect !== true ||
+    !legacyTeacherList.results?.some(
+      (item) =>
+        String(item._id) === submitted.resultId &&
+        item.finalized === true &&
+        item.published === true &&
+        item.percentage === 100,
+    )
+  ) {
+    throw new Error("Published legacy results were hidden in teacher views");
+  }
+  const legacyStudentResult = await (
+    await call("student", "GET", `/api/student/results/${submitted.resultId}`)
+  ).json();
+  const legacyStudentReview = await (
+    await call("student", "GET", `/api/student/review/${submitted.resultId}`)
+  ).json();
+  if (
+    legacyStudentResult.result?.published !== true ||
+    legacyStudentResult.result?.finalized !== true ||
+    legacyStudentReview.questions?.[0]?.isCorrect !== true
+  ) {
+    throw new Error("Published legacy result was not available to its student");
   }
   await call("student", "GET", questionRoute, undefined, 409);
   const expiryTest = await (
@@ -429,8 +565,8 @@ async function main() {
     "file",
     new File(
       [
-        "question,optionA,optionB,optionC,optionD,correctAnswer\n" +
-          "One plus one?,One,Two,Three,Four,B\n",
+        "question,optionA,optionB,optionC,optionD\n" +
+          "One plus one?,One,Two,Three,Four\n",
       ],
       "expiry-questions.csv",
       { type: "text/csv" },

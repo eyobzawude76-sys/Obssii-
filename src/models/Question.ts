@@ -4,7 +4,7 @@ const QuestionSubSchema = new mongoose.Schema({
   questionNumber: { type: Number, required: true },
   encryptedQuestion: { type: String, required: true }, // AES-256 encrypted
   encryptedOptions: [{ type: String, required: true }], // AES-256 encrypted
-  correctAnswerIndex: { type: Number, required: true },
+  correctAnswerIndex: { type: Number, required: false, select: false }, // legacy only; V1 uses teacher grading
   explanation: { type: String }, // optional explanation for students
   createdAt: { type: Date, default: Date.now },
 });

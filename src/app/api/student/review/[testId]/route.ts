@@ -11,7 +11,6 @@ type ReviewQuestion = {
   questionNumber: number;
   encryptedQuestion: string;
   encryptedOptions: string[];
-  correctAnswerIndex: number;
   explanation?: string;
 };
 
@@ -74,9 +73,8 @@ export async function GET(
       questionNumber: question.questionNumber,
       question: decryptString(question.encryptedQuestion),
       options: question.encryptedOptions.map((option) => decryptString(option)),
-      correctAnswerIndex: question.correctAnswerIndex,
       studentAnswerIndex: studentAnswer?.chosenOption ?? null,
-      isCorrect: studentAnswer?.isCorrect ?? false,
+      isCorrect: studentAnswer?.chosenOption == null ? null : studentAnswer.isCorrect ?? null,
       explanation: question.explanation || null,
     };
   });

@@ -21,11 +21,18 @@ export async function GET(
 
   // Get the result and populate student and test info
   const result: any = await Result.findById(resultId)
-    .populate("student", "name email studentId")
+    .populate({
+      path: "student",
+      select: "name email studentId grade section",
+      populate: [
+        { path: "grade", select: "level" },
+        { path: "section", select: "name" },
+      ],
+    })
     .populate("test", "title subject teacher assignment")
     .lean();
 
-  if (!result) {
+  if (!result || result.testCompleted !== true) {
     return NextResponse.json({ error: "Result not found" }, { status: 404 });
   }
 
@@ -70,9 +77,11 @@ export async function GET(
       questionNumber: q.questionNumber,
       question: decryptString(q.encryptedQuestion),
       options: q.encryptedOptions.map((opt: string) => decryptString(opt)),
-      correctAnswerIndex: q.correctAnswerIndex,
       studentAnswerIndex: studentAnswer?.chosenOption ?? null,
-      isCorrect: studentAnswer?.isCorrect ?? false,
+      isCorrect:
+        result.gradingStarted === true || result.published === true
+          ? studentAnswer?.isCorrect ?? null
+          : null,
       explanation: q.explanation || null,
     };
   });
@@ -88,7 +97,9 @@ export async function GET(
     correctAnswers: result.correctAnswers,
     percentage: result.percentage,
     submittedAt: result.submittedAt,
-    finalized: (result as any).finalized || false,
+    finalized:
+      (result as any).finalized === true &&
+      (result.gradingStarted === true || result.published === true),
     published: (result as any).published || false,
     questions: reviewData,
   });
@@ -127,21 +138,35 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  if (!result.testCompleted)
+    return NextResponse.json(
+      { error: "Submission is not complete" },
+      { status: 409 },
+    );
   if (result.published)
     return NextResponse.json(
       { error: "Published results are locked" },
       { status: 409 },
     );
   if (Array.isArray(body?.marks)) {
-    if (result.finalized)
+    if (result.finalized && result.gradingStarted === true)
       return NextResponse.json(
         { error: "Finalized marks are locked" },
         { status: 409 },
       );
+    if (result.gradingStarted !== true) {
+      result.finalized = false;
+      result.correctAnswers = 0;
+      result.percentage = 0;
+      for (const answer of result.answers as any[]) answer.isCorrect = undefined;
+    }
+    result.gradingStarted = true;
+    const seenMarks = new Set<number>();
     for (const mark of body.marks) {
       if (
         !Number.isInteger(mark.questionNumber) ||
-        typeof mark.isCorrect !== "boolean"
+        typeof mark.isCorrect !== "boolean" ||
+        seenMarks.has(mark.questionNumber)
       )
         return NextResponse.json(
           {
@@ -150,14 +175,29 @@ export async function PATCH(
           },
           { status: 400 },
         );
+      seenMarks.add(mark.questionNumber);
       const answer = result.answers.find(
         (item: any) => item.questionNumber === mark.questionNumber,
       );
-      if (answer) answer.isCorrect = mark.isCorrect;
+      if (!answer)
+        return NextResponse.json({ error: "Mark does not match a submitted answer." }, { status: 400 });
+      answer.isCorrect = mark.isCorrect;
     }
     await result.save();
   }
   if (body?.finalize === true) {
+    if (result.finalized && result.gradingStarted === true)
+      return NextResponse.json(
+        { error: "Finalized marks are locked" },
+        { status: 409 },
+      );
+    if (result.gradingStarted !== true) {
+      for (const answer of result.answers as any[]) answer.isCorrect = undefined;
+      result.finalized = false;
+      result.correctAnswers = 0;
+      result.percentage = 0;
+      result.gradingStarted = true;
+    }
     if (!result.testCompleted)
       return NextResponse.json(
         { error: "Submission is not complete" },
@@ -167,6 +207,11 @@ export async function PATCH(
       testId: test._id,
     }).lean();
     const total = questionDoc?.questions?.length || result.totalQuestions;
+    const unansweredForMarking = (result.answers as any[]).filter(
+      (answer) => answer.chosenOption !== undefined && answer.chosenOption !== null && typeof answer.isCorrect !== "boolean",
+    );
+    if (unansweredForMarking.length > 0)
+      return NextResponse.json({ error: "Mark every answered question before finalizing." }, { status: 409 });
     result.totalQuestions = total;
     result.correctAnswers = (result.answers as any[]).filter(
       (answer) => answer.isCorrect === true,
@@ -178,7 +223,7 @@ export async function PATCH(
     await result.save();
   }
   if (body?.publish === true) {
-    if (!result.finalized)
+    if (!result.finalized || result.gradingStarted !== true)
       return NextResponse.json(
         { error: "Finalize marks before publishing" },
         { status: 409 },

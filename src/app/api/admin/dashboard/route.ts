@@ -23,11 +23,17 @@ export async function GET() {
     // Get all tests
     const allTests = await Test.find({}).populate("teacher", "name").lean();
 
-    // Get all results
+    // Keep all completed submissions for activity/completion counts.
     const allResults = await Result.find({ testCompleted: true })
       .populate("student", "name email")
       .populate("test", "title")
       .lean();
+    // Only finalized manual grades or already-published legacy grades count as performance.
+    const gradedResults = allResults.filter(
+      (result) =>
+        result.published === true ||
+        (result.gradingStarted === true && result.finalized === true),
+    );
 
     // User growth trend (last 6 months)
     const sixMonthsAgo = new Date();
@@ -99,31 +105,31 @@ export async function GET() {
 
     // Performance overview
     const avgPerformance =
-      allResults.length > 0
+      gradedResults.length > 0
         ? Math.round(
-            allResults.reduce((sum, r) => sum + r.percentage, 0) /
-              allResults.length,
+            gradedResults.reduce((sum, r) => sum + r.percentage, 0) /
+              gradedResults.length,
           )
         : 0;
 
     const performanceDistribution = [
       {
         range: "90-100%",
-        count: allResults.filter((r) => r.percentage >= 90).length,
+        count: gradedResults.filter((r) => r.percentage >= 90).length,
       },
       {
         range: "75-89%",
-        count: allResults.filter((r) => r.percentage >= 75 && r.percentage < 90)
+        count: gradedResults.filter((r) => r.percentage >= 75 && r.percentage < 90)
           .length,
       },
       {
         range: "60-74%",
-        count: allResults.filter((r) => r.percentage >= 60 && r.percentage < 75)
+        count: gradedResults.filter((r) => r.percentage >= 60 && r.percentage < 75)
           .length,
       },
       {
         range: "Below 60%",
-        count: allResults.filter((r) => r.percentage < 60).length,
+        count: gradedResults.filter((r) => r.percentage < 60).length,
       },
     ];
 
@@ -145,7 +151,7 @@ export async function GET() {
 
     // Top performing teachers (by average student scores)
     const teacherPerformance = new Map();
-    allResults.forEach((result) => {
+    gradedResults.forEach((result) => {
       // Find the test and its teacher
       const resultTestId =
         typeof result.test === "string"
@@ -210,9 +216,15 @@ export async function GET() {
       (sum, test) => sum + (test.assignedStudents?.length || 0),
       0,
     );
+    const completedAssignmentCount = new Set(
+      allResults.map(
+        (result: any) =>
+          `${String(result.test?._id || result.test)}:${String(result.student?._id || result.student)}`,
+      ),
+    ).size;
     const completionRate =
       totalAssignments > 0
-        ? Math.round((allResults.length / totalAssignments) * 100)
+        ? Math.round((completedAssignmentCount / totalAssignments) * 100)
         : 0;
 
     // Active users (users created in last 30 days)

@@ -41,9 +41,16 @@ export async function GET(req: Request) {
   })
     .populate("student", "name email studentId")
     .populate("test", "title subject totalQuestions")
-    .select("student test totalQuestions correctAnswers percentage submittedAt")
+    .select("student test totalQuestions correctAnswers percentage submittedAt finalized gradingStarted published")
     .sort({ submittedAt: -1 })
     .lean();
 
-  return NextResponse.json({ results });
+  const normalizedResults = results.map((result: any) => ({
+    ...result,
+    finalized:
+      result.finalized === true &&
+      (result.gradingStarted === true || result.published === true),
+  }));
+
+  return NextResponse.json({ results: normalizedResults });
 }

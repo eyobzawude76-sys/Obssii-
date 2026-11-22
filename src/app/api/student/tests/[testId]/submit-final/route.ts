@@ -10,11 +10,6 @@ import { getAuthOrThrow } from "@/lib/with-auth";
 import Question from "@/models/Question";
 import Result from "@/models/Result";
 
-type ScoringQuestion = {
-  questionNumber: number;
-  correctAnswerIndex: number;
-};
-
 function submittedResponse(resultId: unknown, autoSubmitted = false) {
   return NextResponse.json({
     ok: true,
@@ -115,33 +110,22 @@ export async function POST(
     );
   }
 
-  const questionSet = (await Question.findOne({
-    testId,
-  }).lean()) as unknown as {
-    questions?: ScoringQuestion[];
+  const questionSet = (await Question.findOne({ testId })
+    .select("questions.questionNumber")
+    .lean()) as unknown as {
+    questions?: Array<{ questionNumber: number }>;
   } | null;
-  const questions = questionSet?.questions || [];
   if (!questionSet) {
     return NextResponse.json(
       { error: "Exam questions are unavailable." },
       { status: 409 },
     );
   }
-
-  let correct = 0;
+  const totalQuestions = (questionSet as any).questions?.length || 0;
   const answers = result.answers || [];
   for (const answer of answers) {
-    const question = questions.find(
-      (item) => item.questionNumber === answer.questionNumber,
-    );
-    answer.isCorrect =
-      !!question && answer.chosenOption === question.correctAnswerIndex;
-    if (answer.isCorrect) correct += 1;
+    answer.isCorrect = undefined;
   }
-  const totalQuestions = questions.length;
-  const percentage = totalQuestions
-    ? Math.round((correct / totalQuestions) * 100)
-    : 0;
 
   const finalized = await Result.updateOne(
     {
@@ -153,11 +137,12 @@ export async function POST(
     {
       $set: {
         answers,
-        correctAnswers: correct,
+        correctAnswers: 0,
         totalQuestions,
-        percentage,
+        percentage: 0,
         testCompleted: true,
         finalized: false,
+        gradingStarted: false,
         published: false,
         autoSubmitted: false,
         submittedAt: new Date(),

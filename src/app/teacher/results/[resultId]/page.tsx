@@ -20,9 +20,8 @@ type QuestionReview = {
   questionNumber: number;
   question: string;
   options: string[];
-  correctAnswerIndex: number;
   studentAnswerIndex: number | null;
-  isCorrect: boolean;
+  isCorrect: boolean | null;
   explanation: string | null;
 };
 
@@ -32,6 +31,8 @@ type DetailedResult = {
     name: string;
     email: string;
     studentId?: string;
+    grade?: { level?: number } | null;
+    section?: { name?: string } | null;
   };
   test: {
     _id: string;
@@ -76,16 +77,17 @@ export default function TeacherResultDetailPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
-          action === "save"
-            ? {
+          action === "publish"
+            ? { publish: true }
+            : {
                 marks: data.questions
-                  .filter((question) => question.studentAnswerIndex !== null)
+                  .filter((question) => question.studentAnswerIndex !== null && typeof question.isCorrect === "boolean")
                   .map((question) => ({
                     questionNumber: question.questionNumber,
                     isCorrect: question.isCorrect,
                   })),
-              }
-            : { [action]: true },
+                ...(action === "finalize" ? { finalize: true } : {}),
+              },
         ),
       });
       const payload = await response.json();
@@ -176,8 +178,8 @@ export default function TeacherResultDetailPage() {
       const scoreSummaryRow = worksheet.addRow(["Score Summary"]);
       scoreSummaryRow.font = { bold: true, size: 14 };
 
-      worksheet.addRow(["Overall Score:", `${data.percentage}%`]);
-      worksheet.addRow(["Correct Answers:", data.correctAnswers]);
+      worksheet.addRow(["Overall Score:", data.finalized ? `${data.percentage}%` : "Pending"]);
+      worksheet.addRow(["Correct Answers:", data.finalized ? data.correctAnswers : "Pending"]);
       worksheet.addRow(["Wrong Answers:", wrongAnswers.length]);
       worksheet.addRow(["Total Questions:", data.totalQuestions]);
 
@@ -193,7 +195,7 @@ export default function TeacherResultDetailPage() {
       const headerRow = worksheet.addRow([
         "Q#",
         "Question",
-        "Correct Answer",
+        "Teacher Mark",
         "Student's Answer",
         "Status",
         "Explanation",
@@ -210,12 +212,6 @@ export default function TeacherResultDetailPage() {
 
       // Add questions
       data.questions.forEach((q) => {
-        const correctAnswer =
-          q.correctAnswerIndex !== null
-            ? `${getOptionLabel(q.correctAnswerIndex)}. ${
-                q.options[q.correctAnswerIndex]
-              }`
-            : "N/A";
         const studentAnswer =
           q.studentAnswerIndex !== null
             ? `${getOptionLabel(q.studentAnswerIndex)}. ${
@@ -225,14 +221,16 @@ export default function TeacherResultDetailPage() {
         const status =
           q.studentAnswerIndex === null
             ? "Unanswered"
-            : q.isCorrect
-              ? "Correct"
-              : "Incorrect";
+            : q.isCorrect === null
+              ? "Not Marked"
+              : q.isCorrect
+                ? "Right"
+                : "Wrong";
 
         const row = worksheet.addRow([
           q.questionNumber,
           q.question,
-          correctAnswer,
+          q.isCorrect === null ? "Not Marked" : q.isCorrect ? "Right" : "Wrong",
           studentAnswer,
           status,
           q.explanation || "-",
@@ -240,14 +238,14 @@ export default function TeacherResultDetailPage() {
 
         // Color code the status
         const statusCell = row.getCell(5);
-        if (status === "Correct") {
+        if (status === "Right") {
           statusCell.fill = {
             type: "pattern",
             pattern: "solid",
             fgColor: { argb: "FF10B981" },
           };
           statusCell.font = { color: { argb: "FFFFFFFF" }, bold: true };
-        } else if (status === "Incorrect") {
+        } else if (status === "Wrong") {
           statusCell.fill = {
             type: "pattern",
             pattern: "solid",
@@ -306,7 +304,9 @@ export default function TeacherResultDetailPage() {
     }
   };
 
-  const wrongAnswers = data?.questions.filter((q) => !q.isCorrect) || [];
+  const wrongAnswers = data?.questions.filter((q) => q.isCorrect === false) || [];
+  const wrongOrUnanswered = data?.questions.filter((q) => q.isCorrect === false || q.studentAnswerIndex === null) || [];
+  const pendingMarks = data?.questions.filter((q) => q.studentAnswerIndex !== null && q.isCorrect === null).length || 0;
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto">
@@ -366,7 +366,7 @@ export default function TeacherResultDetailPage() {
       <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-white p-4">
         <span className="font-medium">
           Marks: {data.finalized ? "Finalized" : "Review required"} · Result:{" "}
-          {data.published ? "Published" : "Unpublished"}
+          {data.published ? "Published" : "Unpublished"} · {pendingMarks} answer(s) awaiting marking
         </span>
         <div className="ml-auto flex flex-wrap gap-2">
           <Button
@@ -413,6 +413,18 @@ export default function TeacherResultDetailPage() {
                 <p className="font-medium">{data.student.email}</p>
               </div>
             </div>
+            {data.student.grade?.level && (
+              <div className="flex items-center gap-3">
+                <Award className="w-5 h-5 text-violet-600" />
+                <div><p className="text-sm text-muted-foreground">Grade</p><p className="font-medium">{data.student.grade.level}</p></div>
+              </div>
+            )}
+            {data.student.section?.name && (
+              <div className="flex items-center gap-3">
+                <Award className="w-5 h-5 text-violet-600" />
+                <div><p className="text-sm text-muted-foreground">Section</p><p className="font-medium">{data.student.section.name}</p></div>
+              </div>
+            )}
             {data.student.studentId && (
               <div className="flex items-center gap-3">
                 <Award className="w-5 h-5 text-violet-600" />
@@ -454,13 +466,13 @@ export default function TeacherResultDetailPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl shadow-md border-2 border-violet-200 p-6 text-center">
           <div className="text-4xl font-bold text-violet-700 mb-2">
-            {data.percentage}%
+            {data.finalized ? `${data.percentage}%` : "—"}
           </div>
           <div className="text-sm text-muted-foreground">Overall Score</div>
         </div>
         <div className="bg-green-50 rounded-xl shadow-md border-2 border-green-200 p-6 text-center">
           <div className="text-4xl font-bold text-green-700 mb-2">
-            {data.correctAnswers}
+            {data.finalized ? data.correctAnswers : "—"}
           </div>
           <div className="text-sm text-muted-foreground">Correct Answers</div>
         </div>
@@ -479,18 +491,18 @@ export default function TeacherResultDetailPage() {
       </div>
 
       {/* Wrong Answers Summary */}
-      {wrongAnswers.length > 0 && (
+      {wrongOrUnanswered.length > 0 && (
         <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-r-lg">
           <div className="flex items-center gap-2 mb-2">
             <XCircle className="w-5 h-5 text-red-600" />
             <h3 className="font-semibold text-red-900">
-              Questions Answered Incorrectly
+              Questions Marked Wrong / Unanswered
             </h3>
           </div>
           <p className="text-sm text-red-800">
-            Student got {wrongAnswers.length} question(s) wrong:{" "}
+            {wrongOrUnanswered.length} question(s) are wrong or unanswered:{" "}
             <span className="font-semibold">
-              {wrongAnswers.map((q) => `Q${q.questionNumber}`).join(", ")}
+              {wrongOrUnanswered.map((q) => `Q${q.questionNumber}`).join(", ")}
             </span>
           </p>
         </div>
@@ -506,16 +518,16 @@ export default function TeacherResultDetailPage() {
           <div
             key={q.questionNumber}
             className={`bg-white rounded-2xl shadow-md border-2 p-6 ${
-              q.isCorrect ? "border-green-300" : "border-red-300"
+              q.isCorrect === true ? "border-green-300" : q.isCorrect === false ? "border-red-300" : "border-gray-300"
             }`}
           >
             {/* Question Header */}
             <div className="flex items-start gap-3 mb-4">
-              {q.isCorrect ? (
+              {q.isCorrect === true ? (
                 <CheckCircle2 className="w-6 h-6 text-green-600 mt-1 shrink-0" />
-              ) : (
+              ) : q.isCorrect === false ? (
                 <XCircle className="w-6 h-6 text-red-600 mt-1 shrink-0" />
-              )}
+              ) : null}
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-sm font-semibold text-gray-600">
@@ -523,12 +535,12 @@ export default function TeacherResultDetailPage() {
                   </span>
                   <span
                     className={`text-xs px-2 py-1 rounded-full font-semibold ${
-                      q.isCorrect
+                      q.isCorrect === true
                         ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
+                        : q.isCorrect === false ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700"
                     }`}
                   >
-                    {q.isCorrect ? "✓ Correct" : "X Incorrect"}
+                    {q.isCorrect === null ? (q.studentAnswerIndex === null ? "Unanswered" : "Not marked") : q.isCorrect ? "✓ Right" : "✗ Wrong"}
                   </span>
                 </div>
                 <p className="text-lg font-medium text-gray-900">
@@ -541,17 +553,17 @@ export default function TeacherResultDetailPage() {
               <div className="ml-9 mt-4 flex gap-2">
                 <Button
                   size="sm"
-                  variant={q.isCorrect ? "default" : "outline"}
+                  variant={q.isCorrect === true ? "default" : "outline"}
                   onClick={() => updateMark(q.questionNumber, true)}
                 >
-                  ✓ Correct
+                  ✓ Right
                 </Button>
                 <Button
                   size="sm"
-                  variant={!q.isCorrect ? "destructive" : "outline"}
+                  variant={q.isCorrect === false ? "destructive" : "outline"}
                   onClick={() => updateMark(q.questionNumber, false)}
                 >
-                  X Incorrect
+                  ✗ Wrong
                 </Button>
               </div>
             )}
@@ -559,19 +571,15 @@ export default function TeacherResultDetailPage() {
             {/* Options */}
             <div className="space-y-3 ml-9">
               {q.options.map((option, idx) => {
-                const isCorrect = idx === q.correctAnswerIndex;
                 const isStudentAnswer = idx === q.studentAnswerIndex;
-                const isWrongAnswer = isStudentAnswer && !isCorrect;
 
                 return (
                   <div
                     key={String.fromCharCode(65 + idx)}
                     className={`p-4 rounded-lg border-2 ${
-                      isCorrect
-                        ? "bg-green-50 border-green-400"
-                        : isWrongAnswer
-                          ? "bg-red-50 border-red-400"
-                          : "bg-gray-50 border-gray-200"
+                      isStudentAnswer
+                        ? "bg-blue-50 border-blue-400"
+                        : "bg-gray-50 border-gray-200"
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -579,19 +587,9 @@ export default function TeacherResultDetailPage() {
                         {getOptionLabel(idx)}.
                       </span>
                       <span className="flex-1 text-gray-800">{option}</span>
-                      {isCorrect && (
-                        <span className="text-xs font-semibold text-green-700 bg-green-200 px-2 py-1 rounded">
-                          Correct Answer
-                        </span>
-                      )}
-                      {isWrongAnswer && (
-                        <span className="text-xs font-semibold text-red-700 bg-red-200 px-2 py-1 rounded">
+                      {isStudentAnswer && (
+                        <span className="text-xs font-semibold text-blue-700 bg-blue-200 px-2 py-1 rounded">
                           Student's Answer
-                        </span>
-                      )}
-                      {isStudentAnswer && isCorrect && (
-                        <span className="text-xs font-semibold text-green-700 bg-green-200 px-2 py-1 rounded">
-                          Student's Answer ✓
                         </span>
                       )}
                     </div>

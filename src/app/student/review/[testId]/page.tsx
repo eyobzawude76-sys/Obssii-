@@ -14,9 +14,8 @@ type QuestionReview = {
   questionNumber: number;
   question: string;
   options: string[];
-  correctAnswerIndex: number;
   studentAnswerIndex: number | null;
-  isCorrect: boolean;
+  isCorrect: boolean | null;
   explanation: string | null;
 };
 
@@ -156,17 +155,21 @@ export default function ReviewTestPage() {
           <div
             key={q.questionNumber}
             className={`bg-white rounded-2xl shadow-md border-2 p-6 ${
-              q.isCorrect
+              q.isCorrect === true
                 ? "border-green-300 bg-green-50/30"
-                : "border-red-300 bg-red-50/30"
+                : q.isCorrect === false
+                  ? "border-red-300 bg-red-50/30"
+                  : "border-gray-300 bg-gray-50"
             }`}
           >
             {/* Question Header */}
             <div className="flex items-start gap-3 mb-4">
-              {q.isCorrect ? (
+              {q.isCorrect === true ? (
                 <CheckCircle2 className="w-6 h-6 text-green-600 mt-1 shrink-0" />
-              ) : (
+              ) : q.isCorrect === false ? (
                 <XCircle className="w-6 h-6 text-red-600 mt-1 shrink-0" />
+              ) : (
+                <AlertCircle className="w-6 h-6 text-gray-500 mt-1 shrink-0" />
               )}
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
@@ -175,12 +178,14 @@ export default function ReviewTestPage() {
                   </span>
                   <span
                     className={`text-xs px-2 py-1 rounded-full font-semibold ${
-                      q.isCorrect
+                      q.isCorrect === true
                         ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
+                        : q.isCorrect === false
+                          ? "bg-red-100 text-red-700"
+                          : "bg-gray-100 text-gray-700"
                     }`}
                   >
-                    {q.isCorrect ? "Correct" : "Incorrect"}
+                    {q.studentAnswerIndex === null ? "Not Answered" : q.isCorrect === true ? "Correct" : q.isCorrect === false ? "Incorrect" : "Not Marked"}
                   </span>
                 </div>
                 <p className="text-lg font-medium text-gray-900">
@@ -192,19 +197,19 @@ export default function ReviewTestPage() {
             {/* Options */}
             <div className="space-y-3 ml-9">
               {q.options.map((option, idx) => {
-                const isCorrect = idx === q.correctAnswerIndex;
                 const isStudentAnswer = idx === q.studentAnswerIndex;
-                const isWrongAnswer = isStudentAnswer && !isCorrect;
 
                 return (
                   <div
                     key={`${getOptionLabel(idx)}-${option}`}
                     className={`p-4 rounded-lg border-2 ${
-                      isCorrect
-                        ? "bg-green-50 border-green-400"
-                        : isWrongAnswer
-                          ? "bg-red-50 border-red-400"
-                          : "bg-gray-50 border-gray-200"
+                      isStudentAnswer
+                        ? q.isCorrect === true
+                          ? "bg-green-50 border-green-400"
+                          : q.isCorrect === false
+                            ? "bg-red-50 border-red-400"
+                            : "bg-gray-100 border-gray-300"
+                        : "bg-gray-50 border-gray-200"
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -212,19 +217,9 @@ export default function ReviewTestPage() {
                         {getOptionLabel(idx)}.
                       </span>
                       <span className="flex-1 text-gray-800">{option}</span>
-                      {isCorrect && (
-                        <span className="text-xs font-semibold text-green-700 bg-green-200 px-2 py-1 rounded">
-                          Correct Answer
-                        </span>
-                      )}
-                      {isWrongAnswer && (
-                        <span className="text-xs font-semibold text-red-700 bg-red-200 px-2 py-1 rounded">
-                          Your Answer
-                        </span>
-                      )}
-                      {isStudentAnswer && isCorrect && (
-                        <span className="text-xs font-semibold text-green-700 bg-green-200 px-2 py-1 rounded">
-                          Your Answer ✓
+                      {isStudentAnswer && (
+                        <span className={`text-xs font-semibold px-2 py-1 rounded ${q.isCorrect === true ? "text-green-700 bg-green-200" : q.isCorrect === false ? "text-red-700 bg-red-200" : "text-gray-700 bg-gray-200"}`}>
+                          Your Answer {q.isCorrect === true ? "✓" : q.isCorrect === false ? "✗" : "·"}
                         </span>
                       )}
                     </div>

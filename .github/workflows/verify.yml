@@ -1,0 +1,49 @@
+name: Verify SmartExam V1
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, "fix/manual-teacher-grading-v1"]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://127.0.0.1:27017/smartexam_ci
+      JWT_SECRET: "CI-only-jwt-secret-7d1b9f3c5a8e2d4f6b0c9a1e3d5f7b8c"
+      AES_MASTER_KEY: "hex:000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      CRON_SECRET: "CI-only-cron-secret-8c7b6f5e4d3c2b1a0f9e8d7c6b5a4f3e"
+      COOKIE_SECURE: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --include=dev
+      - name: Run release and database integrity tests
+        run: npm test
+      - name: Run Biome lint checks
+        run: npx biome lint --max-diagnostics=200
+      - name: Build Next.js application
+        run: npm run build
+      - name: Run disposable Admin-Teacher-Student workflow verification
+        run: npm run verify:runtime-v1

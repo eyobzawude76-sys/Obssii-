@@ -31,6 +31,8 @@ type ResultRow = {
   correctAnswers: number;
   percentage: number;
   submittedAt: string;
+  finalized?: boolean;
+  published?: boolean;
 };
 
 export default function TeacherResultsPage() {
@@ -150,13 +152,13 @@ export default function TeacherResultsPage() {
         const submittedDate = new Date(result.submittedAt);
         worksheet.addRow({
           name: result.student.name,
-          studentId: result.student._id || "-",
+          studentId: result.student.studentId || "-",
           email: result.student.email,
           testName: result.test.title,
           subject: result.test.subject,
           totalQuestions: result.totalQuestions,
-          correctAnswers: result.correctAnswers,
-          percentage: result.percentage,
+          correctAnswers: result.finalized ? result.correctAnswers : "Pending",
+          percentage: result.finalized ? result.percentage : "Pending",
           submittedDate: submittedDate.toLocaleDateString(),
           submittedTime: submittedDate.toLocaleTimeString(),
         });
@@ -302,6 +304,9 @@ export default function TeacherResultsPage() {
                   Score
                 </TableHead>
                 <TableHead className="font-semibold text-violet-700">
+                  Status
+                </TableHead>
+                <TableHead className="font-semibold text-violet-700">
                   Submitted
                 </TableHead>
                 <TableHead className="font-semibold text-violet-700 text-right">
@@ -319,7 +324,7 @@ export default function TeacherResultsPage() {
                     {result.student.name}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {result.student._id || "-"}
+                    {result.student.studentId || "-"}
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
@@ -333,12 +338,19 @@ export default function TeacherResultsPage() {
                     {result.totalQuestions}
                   </TableCell>
                   <TableCell className="text-center">
-                    {result.correctAnswers}
+                    {result.finalized ? result.correctAnswers : "—"}
                   </TableCell>
                   <TableCell className="text-center">
-                    <span className={getScoreColor(result.percentage)}>
-                      {result.percentage}%
-                    </span>
+                    {result.finalized ? (
+                      <span className={getScoreColor(result.percentage)}>
+                        {result.percentage}%
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">Pending</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {result.published ? "Published" : result.finalized ? "Ready to publish" : "Awaiting grading"}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {new Date(result.submittedAt).toLocaleDateString()}
