@@ -45,3 +45,5 @@ jobs:
         run: npx biome lint --max-diagnostics=200
       - name: Build Next.js application
         run: npm run build
+      - name: Run disposable Admin-Teacher-Student workflow verification
+        run: npm run verify:runtime-v1
