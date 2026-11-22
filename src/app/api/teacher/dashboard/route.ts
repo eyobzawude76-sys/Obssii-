@@ -42,7 +42,12 @@ export async function GET() {
     });
 
     // Calculate average result percentage
-    const completedResults = results.filter((r) => r.testCompleted);
+    const completedResults = results.filter(
+      (r) =>
+        r.testCompleted &&
+        (r.published === true ||
+          (r.gradingStarted === true && r.finalized === true)),
+    );
     const avgPercentage =
       completedResults.length > 0
         ? Math.round(
