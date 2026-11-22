@@ -138,6 +138,11 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  if (!result.testCompleted)
+    return NextResponse.json(
+      { error: "Submission is not complete" },
+      { status: 409 },
+    );
   if (result.published)
     return NextResponse.json(
       { error: "Published results are locked" },
