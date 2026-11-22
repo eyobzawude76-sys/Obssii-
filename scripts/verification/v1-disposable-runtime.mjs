@@ -318,7 +318,9 @@ async function main() {
   const repeated = await (await call("student", "GET", questionRoute)).json();
   if (
     question.attemptId !== repeated.attemptId ||
-    question.question !== "Two plus two?"
+    question.question !== "Two plus two?" ||
+    "correctAnswerIndex" in question ||
+    "correctAnswer" in question
   ) {
     throw new Error(
       "Student question or concurrent-safe active attempt check failed",
@@ -375,7 +377,16 @@ async function main() {
     undefined,
     404,
   );
-  await call("teacher", "GET", `/api/teacher/results/${submitted.resultId}`);
+  const teacherResult = await (
+    await call("teacher", "GET", `/api/teacher/results/${submitted.resultId}`)
+  ).json();
+  if (
+    teacherResult.questions?.some(
+      (item) => "correctAnswerIndex" in item || "correctAnswer" in item,
+    )
+  ) {
+    throw new Error("Teacher review response exposed a question answer key");
+  }
   await call("teacher", "PATCH", `/api/teacher/results/${submitted.resultId}`, {
     marks: [{ questionNumber: 1, isCorrect: true }],
     finalize: true,
@@ -397,6 +408,17 @@ async function main() {
     throw new Error(
       "Published student result detail did not return finalized published result",
     );
+  }
+  const studentReview = await (
+    await call("student", "GET", `/api/student/review/${submitted.resultId}`)
+  ).json();
+  if (
+    studentReview.questions?.[0]?.isCorrect !== true ||
+    studentReview.questions?.some(
+      (item) => "correctAnswerIndex" in item || "correctAnswer" in item,
+    )
+  ) {
+    throw new Error("Student review did not return teacher mark without answer key");
   }
   const completed = await (
     await call("student", "GET", "/api/student/results/completed")
