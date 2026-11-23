@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import TermsModal from "@/components/test/TermsModal";
 import { Button } from "@/components/ui/button";
+import { oromoErrorMessage } from "@/lib/oromo-errors";
 
 export default function StudentTestPage() {
   const { id: testId } = useParams<{ id: string }>();
@@ -68,11 +69,7 @@ export default function StudentTestPage() {
         setTermsAccepted(true);
       }
     } catch (error) {
-      setTermsError(
-        error instanceof Error
-          ? error.message
-          : "Could not load exam instructions.",
-      );
+      setTermsError(oromoErrorMessage(error, "Qajeelfama qormaataa fe'uun hin danda'amne."));
     } finally {
       setCheckingTerms(false);
     }
@@ -104,7 +101,7 @@ export default function StudentTestPage() {
     // Monitor fullscreen changes and re-enter if exited
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
-        alert("Please stay in fullscreen mode during the test.");
+        alert("Yeroo qormaataa guutuu fullscreen irratti turuu qabda.");
         enterFullscreen();
       }
     };
@@ -117,7 +114,7 @@ export default function StudentTestPage() {
       e.preventDefault();
       window.history.pushState(null, "", window.location.href);
       alert(
-        "Navigation is disabled during the test. Please submit the test to exit.",
+        "Yeroo qormaataa keessa fuula biraatti ce'uun hin hayyamamu. Ba'uuf qormaata ergi.",
       );
     };
 
@@ -144,13 +141,13 @@ export default function StudentTestPage() {
       // Prevent Ctrl+T (new tab)
       if (e.ctrlKey && e.key === "t") {
         e.preventDefault();
-        alert("Opening new tabs is disabled during the test.");
+        alert("Yeroo qormaataa tab haaraa banuun hin hayyamamu.");
         return false;
       }
       // Prevent Ctrl+N (new window)
       if (e.ctrlKey && e.key === "n") {
         e.preventDefault();
-        alert("Opening new windows is disabled during the test.");
+        alert("Yeroo qormaataa foddaa haaraa banuun hin hayyamamu.");
         return false;
       }
       // Prevent Ctrl+Shift+N (incognito window)
@@ -162,7 +159,7 @@ export default function StudentTestPage() {
       // Prevent Ctrl+W (close tab)
       if (e.ctrlKey && e.key === "w") {
         e.preventDefault();
-        alert("Please submit the test to exit.");
+        alert("Ba'uuf dura qormaata kee ergi.");
         return false;
       }
       // Prevent Alt+F4 (close window) - Windows
@@ -174,7 +171,7 @@ export default function StudentTestPage() {
       // Prevent Cmd+T, Cmd+N on Mac
       if (e.metaKey && (e.key === "t" || e.key === "n")) {
         e.preventDefault();
-        alert("Opening new tabs/windows is disabled during the test.");
+        alert("Yeroo qormaataa tab ykn foddaa haaraa banuun hin hayyamamu.");
         return false;
       }
       // Prevent Cmd+W on Mac
@@ -253,12 +250,10 @@ export default function StudentTestPage() {
         );
         setSubmissionComplete(true);
       } else {
-        setSubmissionError(
-          data?.error || "Your exam could not be submitted. Please retry.",
-        );
+        setSubmissionError(oromoErrorMessage(data?.error, "Qormaata erguu hin dandeenye. Intarneetii kee mirkaneeffadhuutii irra deebi'ii yaali."));
       }
     } catch {
-      setSubmissionError("Network error while submitting. Please retry.");
+      setSubmissionError(oromoErrorMessage("network error", "Qormaata erguu hin dandeenye. Intarneetii kee mirkaneeffadhuutii irra deebi'ii yaali."));
     } finally {
       submissionInFlight.current = false;
       setSubmitting(false);
@@ -281,7 +276,7 @@ export default function StudentTestPage() {
             setSubmissionComplete(true);
             return;
           }
-          setError(data?.error || "Failed to load question.");
+          setError(oromoErrorMessage(data?.error, "Gaaffii qormaataa fe'uun hin danda'amne. Irra deebi'ii yaali."));
           return;
         }
         setAttemptId(data.attemptId);
@@ -302,7 +297,7 @@ export default function StudentTestPage() {
         setAnswerLocked(hasSavedAnswer);
         setAnswerError(null);
       } catch {
-        setError("Network error while loading question.");
+        setError(oromoErrorMessage("network error", "Gaaffii qormaataa fe'uun hin danda'amne. Intarneetii kee mirkaneeffadhu."));
       } finally {
         setLoading(false);
       }
@@ -373,9 +368,7 @@ export default function StudentTestPage() {
           setSelected(data.savedOption);
           setAnswerLocked(true);
         }
-        setAnswerError(
-          data?.error || "Your answer could not be saved. Please retry.",
-        );
+        setAnswerError(oromoErrorMessage(data?.error, "Deebii kee galmeessuu hin dandeenye. Irra deebi'ii yaali."));
         return;
       }
       setAnswerError(null);
