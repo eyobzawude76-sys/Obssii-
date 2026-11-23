@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { oromoErrorMessage } from "@/lib/oromo-errors";
 
 async function downloadWordTemplate() {
   try {
@@ -307,8 +308,9 @@ export default function TeacherQuestionsPage() {
           totalQuestions: t.totalQuestions || 0,
         })),
       );
-    } catch {
+    } catch (error) {
       setTests([]);
+      setResult(oromoErrorMessage(error, "Qormaata barsiisaa fe'uun hin danda'amne."));
     } finally {
       setLoading(false);
     }
@@ -336,7 +338,7 @@ export default function TeacherQuestionsPage() {
       setResult(`Uploaded ${data.count} questions to '${selectedTest.title}'.`);
       await load();
     } catch (e: any) {
-      setResult(e.message || "Upload failed");
+      setResult(oromoErrorMessage(e, "Gaaffilee upload gochuu hin dandeenye. Faayila CSV kee mirkaneeffadhu."));
     } finally {
       setUploading(false);
     }
