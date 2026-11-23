@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { oromoErrorMessage } from "@/lib/oromo-errors";
 
 type Assignment = {
   _id: string;
@@ -26,10 +27,12 @@ export default function TeacherTestsPage() {
   const [assignmentId, setAssignmentId] = useState("");
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [creating, setCreating] = useState(false);
+  const [pageError, setPageError] = useState("");
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
+      setPageError("");
       const response = await fetch("/api/teacher/tests?mine=1");
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Failed to load exams");
@@ -43,8 +46,9 @@ export default function TeacherTestsPage() {
           allowRetake: !!item.allowRetake,
         })),
       );
-    } catch {
+    } catch (error) {
       setTests([]);
+      setPageError(oromoErrorMessage(error, "Qormaata barsiisaa fe'uun hin danda'amne."));
     } finally {
       setLoading(false);
     }
@@ -74,7 +78,7 @@ export default function TeacherTestsPage() {
       setDurationMinutes(60);
       await load();
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Could not create exam");
+      alert(oromoErrorMessage(error, "Qormaata uumuu hin dandeenye. Maaloo odeeffannoo galchite mirkaneeffadhu."));
     } finally {
       setCreating(false);
     }
@@ -88,7 +92,7 @@ export default function TeacherTestsPage() {
     });
     const data = await response.json();
     if (!response.ok) {
-      alert(data.error || "Update failed");
+      alert(oromoErrorMessage(data.error, "Qormaata haaromsuu ykn maxxansuu hin dandeenye."));
       return;
     }
     await load();
@@ -99,6 +103,7 @@ export default function TeacherTestsPage() {
       <h1 className="text-xl md:text-2xl font-bold tracking-tight text-blue-700">
         My Exams
       </h1>
+      {pageError && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{pageError}</p>}
       <form
         onSubmit={create}
         className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-card border border-border rounded-xl p-4 shadow"
