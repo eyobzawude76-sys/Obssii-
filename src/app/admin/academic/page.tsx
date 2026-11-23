@@ -1,6 +1,7 @@
 "use client";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { oromoErrorMessage } from "@/lib/oromo-errors";
 
 type Item = { _id: string; level?: number; name?: string; grade?: any };
 
@@ -27,7 +28,7 @@ export default function AdminAcademicPage() {
       setGradeId((current) => current || String(data.grades[0]._id));
   }, []);
   useEffect(() => {
-    load().catch((e) => setMessage(e.message));
+    load().catch((e) => setMessage(oromoErrorMessage(e, "Caasaalee barnootaa fe'uun hin danda'amne.")));
   }, [load]);
 
   const create = async (
@@ -56,7 +57,7 @@ export default function AdminAcademicPage() {
       if (kind === "subject") setSubjectName("");
       await load();
     } catch (e: any) {
-      setMessage(e.message || "Could not create record");
+      setMessage(oromoErrorMessage(e, "Odeeffannoo barnootaa uumuu hin dandeenye. Galmee galchite mirkaneeffadhu."));
     } finally {
       setBusy(false);
     }
@@ -82,7 +83,7 @@ export default function AdminAcademicPage() {
     });
     const data = await res.json();
     setMessage(
-      res.ok ? `${kind} updated.` : data.error || `Could not update ${kind}`,
+      res.ok ? `${kind} updated.` : oromoErrorMessage(data.error, "Odeeffannoo barnootaa haaromsuu hin dandeenye."),
     );
     if (res.ok) await load();
   };
@@ -101,7 +102,7 @@ export default function AdminAcademicPage() {
     });
     const data = await res.json();
     setMessage(
-      res.ok ? `${kind} deleted.` : data.error || `Could not delete ${kind}`,
+      res.ok ? `${kind} deleted.` : oromoErrorMessage(data.error, "Odeeffannoo barnootaa haquu hin dandeenye."),
     );
     if (res.ok) await load();
   };
