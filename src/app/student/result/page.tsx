@@ -3,6 +3,7 @@ import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { oromoErrorMessage } from "@/lib/oromo-errors";
 
 type CompletedTest = {
   _id: string;
@@ -33,7 +34,7 @@ export default function StudentResultsList() {
       setResults(data.results || []);
     } catch (error) {
       setError(
-        error instanceof Error ? error.message : "Could not load results.",
+        oromoErrorMessage(error, "Bu'aa qormaataa fe'uun hin dandeenye. Fuula haaromsiitii irra deebi'ii yaali."),
       );
     } finally {
       setLoading(false);
@@ -51,7 +52,7 @@ export default function StudentResultsList() {
       </h1>
 
       {loading ? (
-        <div className="text-sm text-muted-foreground">Loading results...</div>
+        <div className="text-sm text-muted-foreground">Bu'aan fe'aa jira...</div>
       ) : error ? (
         <div className="flex flex-col items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-6 text-center">
           <p className="text-red-700">{error}</p>
