@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { oromoErrorMessage } from "@/lib/oromo-errors";
 import {
   Bar,
   BarChart,
@@ -73,20 +74,24 @@ const COLORS = [
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<DashboardData | null>(null);
 
   const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const res = await fetch("/api/student/dashboard");
-      const result = await res.json();
-      if (res.ok) {
-        setData(result);
-      } else {
-        console.error("Dashboard API error:", result);
+      const result = await res.json().catch(() => null);
+      if (!res.ok) {
+        setData(null);
+        setError(oromoErrorMessage(result?.error || result?.detail || "HTTP " + res.status, "Daashboordii Barataa fe'uun hin dandeenye. Fuula haaromsiitii irra deebi'ii yaali."));
+        return;
       }
+      setData(result);
     } catch (error) {
-      console.error("Failed to load dashboard:", error);
+      setData(null);
+      setError(oromoErrorMessage(error, "Daashboordii Barataa fe'uun hin dandeenye. Fuula haaromsiitii irra deebi'ii yaali."));
     } finally {
       setLoading(false);
     }
@@ -109,8 +114,13 @@ export default function StudentDashboard() {
 
   if (!data) {
     return (
-      <div className="text-center py-12">
-        <p className="text-red-600">Failed to load dashboard data</p>
+      <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
+        <p role="alert" className="max-w-xl text-red-700">
+          {error || "Daashboordii Barataa fe'uun hin dandeenye. Fuula haaromsiitii irra deebi'ii yaali."}
+        </p>
+        <button type="button" onClick={() => void loadDashboardData()} className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted">
+          Irra deebi'ii yaali
+        </button>
       </div>
     );
   }
