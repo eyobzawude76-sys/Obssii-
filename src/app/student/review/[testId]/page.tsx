@@ -9,6 +9,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { oromoErrorMessage } from "@/lib/oromo-errors";
 
 type QuestionReview = {
   questionNumber: number;
@@ -45,12 +46,12 @@ export default function ReviewTestPage() {
         const r = await fetch(`/api/student/review/${resultId}`);
         const result = await r.json();
         if (!r.ok) {
-          setError(result.error || "Failed to load review");
+          setError(oromoErrorMessage(result.error, "Deebiiwwan qormaataa fe'uun hin danda'amne."));
           return;
         }
         setData(result);
       } catch {
-        setError("Network error while loading review");
+        setError(oromoErrorMessage("network error", "Deebiiwwan qormaataa fe'uun hin danda'amne. Intarneetii kee mirkaneeffadhu."));
       } finally {
         setLoading(false);
       }
@@ -79,7 +80,7 @@ export default function ReviewTestPage() {
         <div className="bg-red-50 border-2 border-red-300 rounded-xl p-6 text-center">
           <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-3" />
           <p className="text-red-700 font-semibold text-lg">
-            {error || "Failed to load review"}
+            {error || "Deebiiwwan qormaataa fe'uun hin danda'amne."}
           </p>
           <Button
             onClick={() => window.location.reload()}
