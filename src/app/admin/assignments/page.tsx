@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { oromoErrorMessage } from "@/lib/oromo-errors";
 
 type TestRow = { id: string; title: string; subject: string };
 type StudentRow = { id: string; name: string; email: string };
@@ -89,7 +90,9 @@ export default function AssignTestsPage() {
       const ar = await fetch("/api/admin/assignments");
       const adata = (await ar.json()) as RecentAssignment[];
       if (ar.ok) setRecent(adata);
-    } catch {}
+    } catch (error) {
+      setStatus(oromoErrorMessage(error, "Daataa qormaataa fi barattootaa fe'uun hin danda'amne."));
+    }
   }, []);
 
   useEffect(() => {
@@ -108,7 +111,7 @@ export default function AssignTestsPage() {
 
       // Validate end time is after start time
       if (endTime <= startTime) {
-        setStatus("End time must be after start time.");
+        setStatus("Yeroon xumuraa yeroon jalqabaa booda ta'uu qaba.");
         setSaving(false);
         return;
       }
@@ -118,7 +121,7 @@ export default function AssignTestsPage() {
         (endTime.getTime() - startTime.getTime()) / 60000,
       );
 
-      await Promise.all(
+      const responses = await Promise.all(
         students.map((sId) =>
           fetch("/api/admin/assignments", {
             method: "POST",
@@ -135,11 +138,16 @@ export default function AssignTestsPage() {
           }),
         ),
       );
-      setStatus(`Assigned to ${students.length} student(s).`);
+      const failedResponse = responses.find((response) => !response.ok);
+      if (failedResponse) {
+        const errorData = await failedResponse.json().catch(() => null);
+        throw new Error(errorData?.error || "Assignment failed");
+      }
+      setStatus(`Barattoota ${students.length}f qormaanni ramadameera.`);
       setSelectedStudentIds(new Set());
       await load();
-    } catch {
-      setStatus("Failed to assign.");
+    } catch (error) {
+      setStatus(oromoErrorMessage(error, "Qormaata barattootaaf ramaduu hin dandeenye."));
     } finally {
       setSaving(false);
     }
