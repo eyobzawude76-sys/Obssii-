@@ -2,6 +2,7 @@
 import { BookOpen, Clock } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { oromoErrorMessage } from "@/lib/oromo-errors";
 
 type StudentTest = {
   _id: string;
@@ -27,7 +28,7 @@ export default function StudentTestsList() {
       setTests(data.tests || []);
     } catch (error) {
       setError(
-        error instanceof Error ? error.message : "Could not load your tests.",
+        oromoErrorMessage(error, "Qormaata kee fe'uun hin dandeenye. Intarneetii kee mirkaneeffadhuutii irra deebi'ii yaali."),
       );
     } finally {
       setLoading(false);
@@ -48,7 +49,7 @@ export default function StudentTestsList() {
         they will move to the Results tab.
       </p>
       {loading ? (
-        <div className="text-sm text-muted-foreground">Loading…</div>
+        <div className="text-sm text-muted-foreground">Fe'aa jira...</div>
       ) : error ? (
         <div className="flex flex-col items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-6 text-center">
           <p className="text-red-700">{error}</p>
