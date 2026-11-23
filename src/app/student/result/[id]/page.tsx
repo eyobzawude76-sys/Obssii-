@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { oromoErrorMessage } from "@/lib/oromo-errors";
 
 type ResultMetadata = {
   test?: {
@@ -38,14 +39,14 @@ export default function StudentResultPage() {
         const data = await r.json().catch(() => null);
         if (!r.ok) {
           setError(
-            "This result is unavailable. It may not have been published yet.",
+            "Bu'aan kun amma hin jiru. Barsiisaan hanga ammaatti hin maxxansine ta'uu danda'a.",
           );
           return;
         }
         setPercentage(data.result?.percentage ?? 0);
         setMeta({ test: data.test, result: data.result });
       } catch {
-        setError("Network error while loading this result.");
+        setError(oromoErrorMessage("network error", "Bu'aa qormaataa fe'uun hin danda'amne. Intarneetii kee mirkaneeffadhu."));
       } finally {
         setLoading(false);
       }
@@ -79,7 +80,7 @@ export default function StudentResultPage() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
         <p className="max-w-lg text-red-700">
-          {error || "Result unavailable."}
+          {error || "Bu'aan qormaataa hin argamne."}
         </p>
         <div className="flex gap-3">
           <Button onClick={() => window.location.reload()} variant="outline">
