@@ -153,7 +153,7 @@ export default function StudentTestPage() {
       // Prevent Ctrl+Shift+N (incognito window)
       if (e.ctrlKey && e.shiftKey && e.key === "N") {
         e.preventDefault();
-        alert("Opening new windows is disabled during the test.");
+        alert("Yeroo qormaataa foddaa haaraa banuun hin hayyamamu.");
         return false;
       }
       // Prevent Ctrl+W (close tab)
@@ -165,7 +165,7 @@ export default function StudentTestPage() {
       // Prevent Alt+F4 (close window) - Windows
       if (e.altKey && e.key === "F4") {
         e.preventDefault();
-        alert("Please submit the test to exit.");
+        alert("Ba'uuf dura qormaata kee ergi.");
         return false;
       }
       // Prevent Cmd+T, Cmd+N on Mac
@@ -188,7 +188,7 @@ export default function StudentTestPage() {
       // Prevent Escape key (exit fullscreen)
       if (e.key === "Escape") {
         e.preventDefault();
-        alert("Please stay in fullscreen mode during the test.");
+        alert("Yeroo qormaataa guutuu fullscreen irratti turuu qabda.");
         return false;
       }
     };
@@ -379,7 +379,7 @@ export default function StudentTestPage() {
         setIndex(index + 1);
       }
     } catch {
-      setAnswerError("Network error while saving your answer. Please retry.");
+      setAnswerError(oromoErrorMessage("network error", "Deebii kee olkaa'uu hin dandeenye. Intarneetii kee mirkaneeffadhuutii irra deebi'ii yaali."));
     } finally {
       setSubmitting(false);
     }
