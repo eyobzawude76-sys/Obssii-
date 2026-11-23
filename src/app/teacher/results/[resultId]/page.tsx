@@ -15,6 +15,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { oromoErrorMessage } from "@/lib/oromo-errors";
 
 type QuestionReview = {
   questionNumber: number;
@@ -104,7 +105,7 @@ export default function TeacherResultDetailPage() {
             : current,
         );
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Could not update result");
+      alert(oromoErrorMessage(error, "Qabxii barataa olkaa'uu, xumuru ykn maxxansuu hin dandeenye."));
     } finally {
       setSavingMarks(false);
     }
@@ -119,12 +120,12 @@ export default function TeacherResultDetailPage() {
         const r = await fetch(`/api/teacher/results/${resultId}`);
         const result = await r.json();
         if (!r.ok) {
-          setError(result.error || "Failed to load result details");
+          setError(oromoErrorMessage(result.error, "Bu'aa barataa fe'uun hin danda'amne."));
           return;
         }
         setData(result);
       } catch {
-        setError("Network error while loading result details");
+        setError(oromoErrorMessage("network error", "Bu'aa barataa fe'uun hin danda'amne. Intarneetii kee mirkaneeffadhu."));
       } finally {
         setLoading(false);
       }
@@ -302,7 +303,7 @@ export default function TeacherResultDetailPage() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Failed to export result:", error);
-      alert("Failed to export result. Please try again.");
+      alert("Bu'aa barataa Excel keessatti baasu hin dandeenye. Maaloo irra deebi'ii yaali.");
     }
   };
 
@@ -326,7 +327,7 @@ export default function TeacherResultDetailPage() {
         <div className="bg-red-50 border-2 border-red-300 rounded-xl p-6 text-center">
           <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-3" />
           <p className="text-red-700 font-semibold text-lg">
-            {error || "Failed to load result details"}
+            {error || "Bu'aa barataa fe'uun hin danda'amne."}
           </p>
           <Button
             onClick={() => router.push("/teacher/results")}
