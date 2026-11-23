@@ -3,6 +3,7 @@ import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { oromoErrorMessage } from "@/lib/oromo-errors";
 
 type QRow = {
   questionNumber: number;
@@ -17,6 +18,7 @@ export default function TeacherTestDetailsPage() {
 
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<QRow[]>([]);
+  const [pageError, setPageError] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
 
@@ -24,6 +26,7 @@ export default function TeacherTestDetailsPage() {
     if (!testId) return;
     try {
       setLoading(true);
+      setPageError("");
       const res = await fetch(`/api/teacher/tests/${testId}/questions`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
@@ -32,8 +35,9 @@ export default function TeacherTestDetailsPage() {
           (a: QRow, b: QRow) => a.questionNumber - b.questionNumber,
         ),
       );
-    } catch {
+    } catch (error) {
       setRows([]);
+      setPageError(oromoErrorMessage(error, "Gaaffilee qormaataa fe'uun hin danda'amne."));
     } finally {
       setLoading(false);
     }
@@ -67,7 +71,8 @@ export default function TeacherTestDetailsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Save failed");
       await load();
-    } catch {
+    } catch (error) {
+      setPageError(oromoErrorMessage(error, "Gaaffii kana olkaa'uu hin dandeenye. Odeeffannoo isaa mirkaneeffadhu."));
     } finally {
       setSaving(false);
     }
@@ -85,7 +90,8 @@ export default function TeacherTestDetailsPage() {
       setRows((prev) =>
         prev.filter((r) => r.questionNumber !== questionNumber),
       );
-    } catch {
+    } catch (error) {
+      setPageError(oromoErrorMessage(error, "Gaaffii kana haquu hin dandeenye."));
     } finally {
       setDeleting(null);
     }
