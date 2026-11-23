@@ -4,6 +4,7 @@ import { Download, Eye, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { oromoErrorMessage } from "@/lib/oromo-errors";
 import {
   Table,
   TableBody,
@@ -38,6 +39,7 @@ export default function TeacherResultsPage() {
   const [results, setResults] = useState<ResultRow[]>([]);
   const [filteredResults, setFilteredResults] = useState<ResultRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [selectedTest, setSelectedTest] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [tests, setTests] = useState<{ id: string; title: string }[]>([]);
@@ -45,8 +47,15 @@ export default function TeacherResultsPage() {
   const loadResults = useCallback(async () => {
     try {
       setLoading(true);
+      setLoadError("");
       const r = await fetch("/api/teacher/results");
-      const data = await r.json();
+      const data = await r.json().catch(() => null);
+      if (!r.ok) {
+        setLoadError(oromoErrorMessage(data?.error || data?.detail || "HTTP " + r.status, "Bu'aawwan barattootaa fe'uun hin danda'amne."));
+        setResults([]);
+        setFilteredResults([]);
+        return;
+      }
       if (r.ok) {
         const resultData = data.results || [];
         setResults(resultData);
@@ -64,7 +73,7 @@ export default function TeacherResultsPage() {
         setTests(uniqueTests as any);
       }
     } catch (error) {
-      console.error("Failed to load results:", error);
+      setLoadError(oromoErrorMessage(error, "Bu'aawwan barattootaa fe'uun hin danda'amne. Intarneetii kee mirkaneeffadhuutii irra deebi'ii yaali."));
     } finally {
       setLoading(false);
     }
@@ -192,7 +201,7 @@ export default function TeacherResultsPage() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Failed to export results:", error);
-      alert("Failed to export results. Please try again.");
+      alert("Bu'aawwan Excel keessatti baasu hin dandeenye. Maaloo irra deebi'ii yaali.");
     }
   };
 
@@ -206,6 +215,14 @@ export default function TeacherResultsPage() {
           View and analyze student performance on completed tests
         </p>
       </div>
+      {loadError && (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <span>{loadError}</span>
+          <Button variant="outline" size="sm" onClick={() => void loadResults()}>
+            Irra deebi'ii yaali
+          </Button>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 items-center bg-white p-4 rounded-xl border border-border shadow-sm">
