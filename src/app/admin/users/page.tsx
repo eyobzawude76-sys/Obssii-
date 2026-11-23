@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import { Button } from "@/components/ui/button";
+import { oromoErrorMessage } from "@/lib/oromo-errors";
 
 type Row = {
   id: string;
@@ -71,7 +72,7 @@ export default function AdminUsersPage() {
     if (t.ok) setAssignments(assignmentData);
   }, []);
   useEffect(() => {
-    load().catch(() => setMessage("Could not load Admin data."));
+    load().catch((error) => setMessage(oromoErrorMessage(error, "Daataan Admin fe'uun hin danda'amne. Fuula haaromsiitii irra deebi'ii yaali.")));
   }, [load]);
 
   const availableSections = sections.filter(
@@ -114,7 +115,7 @@ export default function AdminUsersPage() {
       setEmail("");
       await load();
     } catch (error: any) {
-      setMessage(error.message || "Account creation failed");
+      setMessage(oromoErrorMessage(error, "Herrega fayyadamaa uumuu hin dandeenye. Maaloo odeeffannoo galchite mirkaneeffadhu."));
     } finally {
       setBusy(false);
     }
@@ -135,7 +136,7 @@ export default function AdminUsersPage() {
       setMessage("Teacher assignment created.");
       await load();
     } catch (error: any) {
-      setMessage(error.message || "Assignment failed");
+      setMessage(oromoErrorMessage(error, "Barsiisaa ramaduu hin dandeenye. Ramaddii galchite mirkaneeffadhu."));
     } finally {
       setBusy(false);
     }
@@ -148,7 +149,7 @@ export default function AdminUsersPage() {
       body: JSON.stringify({ id: user.id, isActive: !user.isActive }),
     });
     if (res.ok) await load();
-    else setMessage((await res.json()).error || "Could not update account");
+    else setMessage(oromoErrorMessage((await res.json()).error, "Haala herrega fayyadamaa jijjiiruu hin dandeenye."));
   };
   const removeAssignment = async (id: string) => {
     const res = await fetch("/api/admin/teaching-assignments", {
@@ -157,7 +158,7 @@ export default function AdminUsersPage() {
       body: JSON.stringify({ id }),
     });
     if (res.ok) await load();
-    else setMessage("Could not remove assignment");
+    else setMessage(oromoErrorMessage((await res.json()).error, "Ramaddii barsiisaa haquu hin dandeenye."));
   };
   const saveEnrollment = async (e: FormEvent) => {
     e.preventDefault();
@@ -176,7 +177,7 @@ export default function AdminUsersPage() {
       setMessage("Student enrollment updated.");
       setEditingStudent(null);
       await load();
-    } else setMessage(data.error || "Could not update enrollment");
+    } else setMessage(oromoErrorMessage(data.error, "Kutaa fi kutaa keessaa barataa jijjiiruu hin dandeenye."));
   };
 
   return (
