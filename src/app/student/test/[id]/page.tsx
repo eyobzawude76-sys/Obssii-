@@ -400,15 +400,20 @@ export default function StudentTestPage() {
         <div className="max-w-lg rounded-2xl border border-green-200 bg-white p-8 text-center shadow-lg">
           <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-green-600" />
           <h1 className="mb-3 text-2xl font-bold text-green-800">
-            {autoSubmitted ? "Time expired" : "Exam submitted"}
+            {autoSubmitted ? "Yeroon qormaataa xumurame" : "Qormaanni milkaa'inaan ergame"}
           </h1>
           <p className="text-gray-700">
-            Your answers have been submitted. Your result will be available
-            after your teacher publishes it.
+            Deebiin kee sirnaan ergameera. Barsiisaan bu'aa kee erga maxxansee booda bu'aa fi deebii kee bal'inaan ilaaluu dandeessa.
+            Qormaanni kun tarree qormaata fudhatamuu danda'an keessaa haqameera.
           </p>
-          <Button asChild className="mt-6 bg-green-600 hover:bg-green-700">
-            <a href="/student/result">View published results</a>
-          </Button>
+          <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+            <Button asChild className="bg-green-600 hover:bg-green-700">
+              <a href="/student/test">Gara qormaata jiranitti deebi'i</a>
+            </Button>
+            <Button asChild variant="outline">
+              <a href="/student/result">Bu'aa maxxanfame ilaali</a>
+            </Button>
+          </div>
         </div>
       </div>
     );
