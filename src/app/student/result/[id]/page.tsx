@@ -161,12 +161,20 @@ export default function StudentResultPage() {
             </>
           ) : null}
         </ul>
-        <Button
-          onClick={close}
-          className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 text-base mt-4 rounded-lg"
-        >
-          Close Result
-        </Button>
+        <div className="mt-4 flex flex-col sm:flex-row justify-center gap-3">
+          <Button asChild className="bg-green-600 hover:bg-green-700 text-white">
+            <Link href={`/student/review/${resultId}`}>
+              Deebii koo bal'inaan ilaali
+            </Link>
+          </Button>
+          <Button
+            onClick={close}
+            variant="outline"
+            className="px-6 py-2 text-base rounded-lg"
+          >
+            Bu'aa cufi
+          </Button>
+        </div>
       </div>
       <div className="mt-2 text-sm text-muted-foreground">
         Note: You will not be able to see this result again.
